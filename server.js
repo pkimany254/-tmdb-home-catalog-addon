@@ -7,7 +7,7 @@ const KEY = process.env.TMDB_API_KEY;
 
 const manifest = {
   id: "org.pkimany254.tmdb-home-catalogs",
-  version: "2.1.0",
+  version: "3.0.0",
   name: "TMDB WuPlay Home Catalogs",
   description: "Catalog-only WuPlay/Stremio addon powered by TMDB.",
   resources: ["catalog"],
@@ -902,5 +902,5 @@ serveHTTP(
 );
 
 console.log(
-  `TMDB WuPlay Home Catalogs v2.1 listening on port ${PORT}`
+  `TMDB WuPlay Home Catalogs v3.0 listening on port ${PORT}`
 );
