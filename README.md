@@ -1,47 +1,125 @@
-# TMDB Home Catalogs — Stremio Addon
+# TMDB WuPlay Home Catalogs
 
-A catalog-only Stremio addon for a home-menu setup.
+A catalog-only Stremio/WuPlay addon powered by TMDB.
+
+This addon provides curated home-page catalogs for WuPlay. It provides catalog data only and does not provide streams.
+
+## Current Version
+
+**3.0.0**
 
 ## Catalogs
 
-1. Trending in Kenya — mixed movies + series, using TMDB Kenya availability/popularity filtering.
-2. Airing Today — TV series with episodes airing today.
-3. Calendar Videos — upcoming movies + TV releases over the next 14 days, ordered by date.
-4. Top 10 This Week — mixed movies + series, ordered by TMDB popularity.
+### General Discovery
 
-This addon provides **no streams**.
+- **Trending in Kenya**
+  - Mixed movies and series
+  - Uses Kenya as the target region
+  - Sorted by popularity
+  - Anime excluded
+  - Movies require a digital release
 
-## Requirements
+- **New Releases**
+  - Mixed movies and series
+  - Recent releases from the last 14 days
+  - Focuses on popular titles
+  - Anime excluded
+  - Movies require a digital release
 
-- Node.js 18+
-- A TMDB API key
+- **New Episodes**
+  - Popular series with recent episode activity
+  - Covers the previous 7 days
+  - Anime excluded
 
-## Run locally
+- **Airing Today**
+  - Popular TV series airing today
+  - Anime excluded
 
-```bash
-npm install
-```
+### Top 10
 
-Set the environment variable:
+- **Top 10 This Week**
+  - Mixed movies and series
+  - Based on TMDB weekly trending
+  - Limited to releases from the current year
+  - Anime excluded
+  - Movies require a digital release
 
-```bash
-TMDB_API_KEY=YOUR_KEY npm start
-```
+- **Top 10 Movies This Week**
+  - Movies only
+  - Based on TMDB weekly trending
+  - Current-year releases only
+  - Anime excluded
+  - Movies require a digital release
 
-The manifest will be available at:
+- **Top 10 Series This Week**
+  - Series only
+  - Based on TMDB weekly trending
+  - Current-year releases only
+  - Anime excluded
 
-`http://localhost:7000/manifest.json`
+### Upcoming
 
-For a phone/TV to use it, the addon must be hosted on a reachable HTTPS URL.
+- **Calendar Videos**
+  - Mixed movies and series
+  - Covers upcoming releases over the next 14 days
+  - Sorted by popularity
+  - Anime excluded
+  - Movies require a digital release
 
-## Deploy
+### Anime
 
-Deploy the folder to a Node.js host, set `TMDB_API_KEY` as an environment variable, and expose the port supplied by the host.
+- **Trending Anime Series**
+  - Anime series only
+  - Uses multiple TMDB discovery pages for broader coverage
+  - Japanese-origin animation
+  - Sorted by popularity
 
-Then install:
+## Filtering
 
-`https://YOUR-DOMAIN/manifest.json`
+### Anime
 
-## Important
+Anime is excluded from the general catalogs so that anime can have its own dedicated section.
 
-TMDB's `/trending` endpoint is not a true Kenya-specific trending chart. The "Trending in Kenya" catalog therefore uses TMDB movie and TV discovery with `watch_region=KE` and popularity sorting. If you want a stricter Kenya ranking, that logic can be changed later.
+The general anime detection uses:
+
+- TMDB Animation genre
+- Japanese origin
+
+The dedicated anime catalog uses a broader TMDB discovery search across multiple pages.
+
+### Digital Movie Releases
+
+Movie catalogs use TMDB release-date information.
+
+Movies are included only when TMDB reports a digital release.
+
+This helps prevent unreleased theatrical titles and CAM-style releases from appearing in the normal movie catalogs.
+
+## Caching
+
+Catalog responses are cached to reduce unnecessary TMDB API requests.
+
+Default catalog cache:
+
+- 15 minutes
+
+Stale revalidation:
+
+- 30 minutes
+
+Stale-error fallback:
+
+- 24 hours
+
+TMDB digital-release information is cached for 24 hours.
+
+## Environment Variables
+
+The addon requires:
+
+`TMDB_API_KEY`
+
+Example:
+
+```text
+TMDB_API_KEY=your_tmdb_api_key
