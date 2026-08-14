@@ -7,7 +7,7 @@ const KEY = process.env.TMDB_API_KEY;
 
 const manifest = {
   id: "org.pkimany254.tmdb-home-catalogs",
-  version: "2.0.0",
+  version: "2.1.0",
   name: "TMDB WuPlay Home Catalogs",
   description: "Catalog-only WuPlay/Stremio addon powered by TMDB.",
   resources: ["catalog"],
@@ -39,6 +39,12 @@ const manifest = {
       extra: [{ name: "skip", isRequired: false }]
     },
     {
+      id: "top10-week",
+      type: "movie",
+      name: "Top 10 This Week",
+      extra: [{ name: "skip", isRequired: false }]
+    },
+    {
       id: "top10-movies-week",
       type: "movie",
       name: "Top 10 Movies This Week",
@@ -57,12 +63,6 @@ const manifest = {
       extra: [{ name: "skip", isRequired: false }]
     },
     {
-      id: "anime-movies",
-      type: "movie",
-      name: "Trending Anime Movies",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
       id: "anime-series",
       type: "series",
       name: "Trending Anime Series",
@@ -73,6 +73,10 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 const cache = new Map();
+
+/* =========================================================
+   TMDB REQUEST
+========================================================= */
 
 async function tmdb(path, params = {}, ttl = 900) {
   if (!KEY) {
@@ -91,6 +95,7 @@ async function tmdb(path, params = {}, ttl = 900) {
   }
 
   const cacheKey = url.toString();
+
   const cached = cache.get(cacheKey);
 
   if (cached && cached.expires > Date.now()) {
@@ -112,6 +117,10 @@ async function tmdb(path, params = {}, ttl = 900) {
 
   return data;
 }
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 function img(path, size = "w500") {
   return path ? `${IMG}/${size}${path}` : undefined;
@@ -144,15 +153,10 @@ function seriesMeta(x) {
 }
 
 /*
- * Anime detection.
+ * Anime detection for EXCLUDING anime from normal rows.
  *
- * TMDB doesn't provide a perfect "is anime" flag.
- * We use:
- *   Animation genre (16)
- *   +
- *   Japanese origin (JP)
- *
- * This keeps normal Western animation out of the anime catalogs.
+ * Animation genre = 16
+ * Japanese origin = JP
  */
 function isAnime(x) {
   return (
@@ -167,14 +171,18 @@ function withoutAnime(items) {
 
 function sortPopularity(items) {
   return [...items].sort(
-    (a, b) => (b.popularity || 0) - (a.popularity || 0)
+    (a, b) =>
+      (b.popularity || 0) -
+      (a.popularity || 0)
   );
 }
 
 function mixedMeta(items) {
   return items
     .filter(
-      x => x.media_type === "movie" || x.media_type === "tv"
+      x =>
+        x.media_type === "movie" ||
+        x.media_type === "tv"
     )
     .map(x =>
       x.media_type === "movie"
@@ -199,20 +207,30 @@ function dedupe(items) {
 function day(offset = 0) {
   const d = new Date();
 
-  d.setUTCDate(d.getUTCDate() + offset);
+  d.setUTCDate(
+    d.getUTCDate() + offset
+  );
 
   return d.toISOString().slice(0, 10);
 }
 
+/* =========================================================
+   DIGITAL RELEASE FILTER
+========================================================= */
+
 /*
- * Check whether a movie has a TMDB digital release.
- *
  * TMDB release type:
  *
+ * 1 = Premiere
+ * 2 = Theatrical limited
+ * 3 = Theatrical
  * 4 = Digital
  * 5 = Physical
  * 6 = TV
+ *
+ * We only allow movies that have a type 4 digital release.
  */
+
 async function hasDigitalRelease(movieId) {
   const data = await tmdb(
     `/movie/${movieId}/release_dates`,
@@ -220,19 +238,17 @@ async function hasDigitalRelease(movieId) {
     86400
   );
 
-  return (data.results || []).some(country =>
-    (country.release_dates || []).some(
-      release => release.type === 4
-    )
+  return (data.results || []).some(
+    country =>
+      (country.release_dates || []).some(
+        release => release.type === 4
+      )
   );
 }
 
-/*
- * Filter movie results so unreleased/CAM-style theatrical movies
- * don't appear in the general movie catalogs.
- */
 async function digitalOnly(items) {
   const output = [];
+
   let index = 0;
 
   async function worker() {
@@ -240,7 +256,9 @@ async function digitalOnly(items) {
       const item = items[index++];
 
       try {
-        if (await hasDigitalRelease(item.id)) {
+        if (
+          await hasDigitalRelease(item.id)
+        ) {
           output.push(item);
         }
       } catch (error) {
@@ -253,82 +271,94 @@ async function digitalOnly(items) {
     }
   }
 
-  const workers = Math.min(8, items.length);
+  const workerCount = Math.min(
+    8,
+    items.length
+  );
 
   await Promise.all(
-    Array.from({ length: workers }, worker)
+    Array.from(
+      { length: workerCount },
+      worker
+    )
   );
 
   return output;
 }
 
-/*
- * 1. TRENDING IN KENYA
- *
- * Movies + series
- * Kenya watch-region
- * Movies require digital release
- * Anime excluded
- * Popularity sorted
- */
+/* =========================================================
+   1. TRENDING IN KENYA
+========================================================= */
+
 async function trendingKenya() {
-  const [movies, tv] = await Promise.all([
-    tmdb("/discover/movie", {
-      watch_region: "KE",
-      sort_by: "popularity.desc",
-      include_adult: "false",
-      page: 1
-    }),
+  const [movies, tv] =
+    await Promise.all([
+      tmdb("/discover/movie", {
+        watch_region: "KE",
+        sort_by: "popularity.desc",
+        include_adult: "false",
+        page: 1
+      }),
 
-    tmdb("/discover/tv", {
-      watch_region: "KE",
-      sort_by: "popularity.desc",
-      include_adult: "false",
-      page: 1
-    })
-  ]);
+      tmdb("/discover/tv", {
+        watch_region: "KE",
+        sort_by: "popularity.desc",
+        include_adult: "false",
+        page: 1
+      })
+    ]);
 
-  const movieItems = withoutAnime(
-    (movies.results || []).map(x => ({
-      ...x,
-      media_type: "movie"
-    }))
-  );
+  const movieItems =
+    withoutAnime(
+      (movies.results || []).map(
+        x => ({
+          ...x,
+          media_type: "movie"
+        })
+      )
+    );
 
-  const digitalMovies = await digitalOnly(movieItems);
+  const digitalMovies =
+    await digitalOnly(movieItems);
 
-  const seriesItems = withoutAnime(
-    (tv.results || []).map(x => ({
-      ...x,
-      media_type: "tv"
-    }))
-  );
+  const seriesItems =
+    withoutAnime(
+      (tv.results || []).map(
+        x => ({
+          ...x,
+          media_type: "tv"
+        })
+      )
+    );
 
-  const combined = sortPopularity([
-    ...digitalMovies,
-    ...seriesItems
-  ]);
+  const combined =
+    sortPopularity([
+      ...digitalMovies,
+      ...seriesItems
+    ]);
 
-  return mixedMeta(dedupe(combined)).slice(0, 100);
+  return mixedMeta(
+    dedupe(combined)
+  ).slice(0, 100);
 }
 
-/*
- * 2. AIRING TODAY
- *
- * Only reasonably popular shows.
- * Anime excluded.
- */
+/* =========================================================
+   2. AIRING TODAY
+========================================================= */
+
 async function airingToday() {
   const data = await tmdb(
     "/tv/airing_today",
     { page: 1 }
   );
 
-  const shows = withoutAnime(
-    data.results || []
-  ).filter(
-    x => (x.popularity || 0) >= 10
-  );
+  const shows =
+    withoutAnime(
+      data.results || []
+    ).filter(
+      x =>
+        (x.popularity || 0) >= 10
+    );
 
   return shows
     .sort(
@@ -340,13 +370,10 @@ async function airingToday() {
     .slice(0, 100);
 }
 
-/*
- * 3. NEW EPISODES
- *
- * Popular series with recent air-date activity.
- *
- * Window: last 7 days.
- */
+/* =========================================================
+   3. NEW EPISODES
+========================================================= */
+
 async function newEpisodes() {
   const data = await tmdb(
     "/discover/tv",
@@ -359,11 +386,13 @@ async function newEpisodes() {
     }
   );
 
-  const shows = withoutAnime(
-    data.results || []
-  ).filter(
-    x => (x.popularity || 0) >= 10
-  );
+  const shows =
+    withoutAnime(
+      data.results || []
+    ).filter(
+      x =>
+        (x.popularity || 0) >= 10
+    );
 
   return shows
     .sort(
@@ -375,89 +404,201 @@ async function newEpisodes() {
     .slice(0, 100);
 }
 
-/*
- * 4. CALENDAR VIDEOS
- *
- * Upcoming movies + series
- * Next 14 days
- * Popularity sorted
- * Anime excluded
- * Movies require digital release
- */
+/* =========================================================
+   4. CALENDAR VIDEOS
+========================================================= */
+
 async function calendarVideos() {
-  const [movies, tv] = await Promise.all([
-    tmdb("/discover/movie", {
-      "primary_release_date.gte": day(),
-      "primary_release_date.lte": day(14),
-      sort_by: "popularity.desc",
-      include_adult: "false",
-      page: 1
-    }),
+  const [movies, tv] =
+    await Promise.all([
+      tmdb("/discover/movie", {
+        "primary_release_date.gte":
+          day(),
 
-    tmdb("/discover/tv", {
-      "air_date.gte": day(),
-      "air_date.lte": day(14),
-      sort_by: "popularity.desc",
-      include_adult: "false",
-      page: 1
-    })
-  ]);
+        "primary_release_date.lte":
+          day(14),
 
-  const movieItems = withoutAnime(
-    (movies.results || []).map(x => ({
-      ...x,
-      media_type: "movie"
-    }))
-  );
+        sort_by:
+          "popularity.desc",
 
-  const digitalMovies = await digitalOnly(movieItems);
+        include_adult:
+          "false",
 
-  const seriesItems = withoutAnime(
-    (tv.results || []).map(x => ({
-      ...x,
-      media_type: "tv"
-    }))
-  );
+        page: 1
+      }),
 
-  const combined = sortPopularity([
-    ...digitalMovies,
-    ...seriesItems
-  ]);
+      tmdb("/discover/tv", {
+        "air_date.gte":
+          day(),
+
+        "air_date.lte":
+          day(14),
+
+        sort_by:
+          "popularity.desc",
+
+        include_adult:
+          "false",
+
+        page: 1
+      })
+    ]);
+
+  const movieItems =
+    withoutAnime(
+      (movies.results || []).map(
+        x => ({
+          ...x,
+          media_type: "movie"
+        })
+      )
+    );
+
+  const digitalMovies =
+    await digitalOnly(movieItems);
+
+  const seriesItems =
+    withoutAnime(
+      (tv.results || []).map(
+        x => ({
+          ...x,
+          media_type: "tv"
+        })
+      )
+    );
+
+  const combined =
+    sortPopularity([
+      ...digitalMovies,
+      ...seriesItems
+    ]);
 
   return mixedMeta(
     dedupe(combined)
   ).slice(0, 100);
 }
 
-/*
- * 5. TOP 10 MOVIES THIS WEEK
- *
- * Uses TMDB weekly trending.
- * Only movies released during the current year.
- * Anime excluded.
- * Digital release required.
- */
-async function top10MoviesWeek() {
-  const data = await tmdb(
-    "/trending/movie/week",
-    { page: 1 }
-  );
+/* =========================================================
+   5. TOP 10 THIS WEEK
+   MIXED MOVIES + SERIES
+========================================================= */
+
+async function top10Week() {
+  const [
+    movieTrending,
+    seriesTrending
+  ] = await Promise.all([
+    tmdb(
+      "/trending/movie/week",
+      { page: 1 }
+    ),
+
+    tmdb(
+      "/trending/tv/week",
+      { page: 1 }
+    )
+  ]);
 
   const currentYear =
     new Date().getUTCFullYear();
 
-  let movies = (data.results || [])
-    .filter(
-      x =>
-        (x.release_date || "").startsWith(
-          String(currentYear)
-        )
-    )
-    .filter(
-      x => !isAnime(x)
+  /*
+   * Movies:
+   * - Current year
+   * - No anime
+   * - Digital release
+   */
+
+  let movies =
+    (movieTrending.results || [])
+      .filter(
+        x =>
+          (x.release_date || "")
+            .startsWith(
+              String(currentYear)
+            )
+      )
+      .filter(
+        x => !isAnime(x)
+      );
+
+  movies =
+    await digitalOnly(movies);
+
+  movies =
+    movies.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  /*
+   * Series:
+   * - Current year
+   * - No anime
+   */
+
+  const series =
+    (seriesTrending.results || [])
+      .filter(
+        x =>
+          (x.first_air_date || "")
+            .startsWith(
+              String(currentYear)
+            )
+      )
+      .filter(
+        x => !isAnime(x)
+      )
+      .map(x => ({
+        ...x,
+        media_type: "tv"
+      }));
+
+  /*
+   * Mix movies + series.
+   * Rank everything by TMDB popularity.
+   */
+
+  const combined =
+    sortPopularity([
+      ...movies,
+      ...series
+    ]);
+
+  return mixedMeta(
+    dedupe(combined)
+  ).slice(0, 10);
+}
+
+/* =========================================================
+   6. TOP 10 MOVIES THIS WEEK
+========================================================= */
+
+async function top10MoviesWeek() {
+  const data =
+    await tmdb(
+      "/trending/movie/week",
+      { page: 1 }
     );
 
-  movies = await digitalOnly(movies);
+  const currentYear =
+    new Date().getUTCFullYear();
+
+  let movies =
+    (data.results || [])
+      .filter(
+        x =>
+          (x.release_date || "")
+            .startsWith(
+              String(currentYear)
+            )
+      )
+      .filter(
+        x => !isAnime(x)
+      );
+
+  movies =
+    await digitalOnly(movies);
 
   return movies
     .sort(
@@ -469,28 +610,29 @@ async function top10MoviesWeek() {
     .slice(0, 10);
 }
 
-/*
- * 6. TOP 10 SERIES THIS WEEK
- *
- * Uses TMDB weekly trending.
- * Only shows first aired during current year.
- * Anime excluded.
- */
+/* =========================================================
+   7. TOP 10 SERIES THIS WEEK
+========================================================= */
+
 async function top10SeriesWeek() {
-  const data = await tmdb(
-    "/trending/tv/week",
-    { page: 1 }
-  );
+  const data =
+    await tmdb(
+      "/trending/tv/week",
+      { page: 1 }
+    );
 
   const currentYear =
     new Date().getUTCFullYear();
 
-  return (data.results || [])
+  return (
+    data.results || []
+  )
     .filter(
       x =>
-        (x.first_air_date || "").startsWith(
-          String(currentYear)
-        )
+        (x.first_air_date || "")
+          .startsWith(
+            String(currentYear)
+          )
     )
     .filter(
       x => !isAnime(x)
@@ -504,169 +646,234 @@ async function top10SeriesWeek() {
     .slice(0, 10);
 }
 
-/*
- * 7. NEW RELEASES
- *
- * Last 14 days
- * Popular movies + series
- * Anime excluded
- * Movies require digital release.
- */
+/* =========================================================
+   8. NEW RELEASES
+========================================================= */
+
 async function newReleases() {
-  const [movies, tv] = await Promise.all([
-    tmdb("/discover/movie", {
-      "primary_release_date.gte": day(-14),
-      "primary_release_date.lte": day(),
-      sort_by: "popularity.desc",
-      include_adult: "false",
-      page: 1
-    }),
+  const [movies, tv] =
+    await Promise.all([
+      tmdb("/discover/movie", {
+        "primary_release_date.gte":
+          day(-14),
 
-    tmdb("/discover/tv", {
-      "first_air_date.gte": day(-14),
-      "first_air_date.lte": day(),
-      sort_by: "popularity.desc",
-      include_adult: "false",
-      page: 1
-    })
-  ]);
+        "primary_release_date.lte":
+          day(),
 
-  const movieItems = withoutAnime(
-    (movies.results || [])
-      .filter(
-        x => (x.popularity || 0) >= 10
-      )
-      .map(x => ({
-        ...x,
-        media_type: "movie"
-      }))
-  );
+        sort_by:
+          "popularity.desc",
+
+        include_adult:
+          "false",
+
+        page: 1
+      }),
+
+      tmdb("/discover/tv", {
+        "first_air_date.gte":
+          day(-14),
+
+        "first_air_date.lte":
+          day(),
+
+        sort_by:
+          "popularity.desc",
+
+        include_adult:
+          "false",
+
+        page: 1
+      })
+    ]);
+
+  const movieItems =
+    withoutAnime(
+      (movies.results || [])
+        .filter(
+          x =>
+            (x.popularity || 0) >= 10
+        )
+        .map(x => ({
+          ...x,
+          media_type: "movie"
+        }))
+    );
 
   const digitalMovies =
     await digitalOnly(movieItems);
 
-  const seriesItems = withoutAnime(
-    (tv.results || [])
-      .filter(
-        x => (x.popularity || 0) >= 10
-      )
-      .map(x => ({
-        ...x,
-        media_type: "tv"
-      }))
-  );
+  const seriesItems =
+    withoutAnime(
+      (tv.results || [])
+        .filter(
+          x =>
+            (x.popularity || 0) >= 10
+        )
+        .map(x => ({
+          ...x,
+          media_type: "tv"
+        }))
+    );
 
-  const combined = sortPopularity([
-    ...digitalMovies,
-    ...seriesItems
-  ]);
+  const combined =
+    sortPopularity([
+      ...digitalMovies,
+      ...seriesItems
+    ]);
 
   return mixedMeta(
     dedupe(combined)
   ).slice(0, 100);
 }
 
-/*
- * 8. TRENDING ANIME MOVIES
- */
-async function animeMovies() {
-  const data = await tmdb(
-    "/trending/movie/week",
-    { page: 1 }
-  );
-
-  return (data.results || [])
-    .filter(
-      x => isAnime(x)
-    )
-    .sort(
-      (a, b) =>
-        (b.popularity || 0) -
-        (a.popularity || 0)
-    )
-    .map(movieMeta)
-    .slice(0, 100);
-}
+/* =========================================================
+   9. TRENDING ANIME SERIES
+   EXPANDED COVERAGE
+========================================================= */
 
 /*
- * 9. TRENDING ANIME SERIES
+ * Instead of relying only on /trending/tv/week,
+ * use TMDB Discover across several pages.
+ *
+ * TMDB supports:
+ *
+ * with_genres=16
+ * with_origin_country=JP
+ *
+ * This gives us a much larger anime pool.
  */
+
 async function animeSeries() {
-  const data = await tmdb(
-    "/trending/tv/week",
-    { page: 1 }
+  const pages = [1, 2, 3, 4, 5];
+
+  const responses =
+    await Promise.all(
+      pages.map(page =>
+        tmdb(
+          "/discover/tv",
+          {
+            with_genres: "16",
+            with_origin_country: "JP",
+            sort_by:
+              "popularity.desc",
+            include_adult:
+              "false",
+            page
+          },
+          1800
+        )
+      )
+    );
+
+  let anime = [];
+
+  for (const response of responses) {
+    anime.push(
+      ...(response.results || [])
+    );
+  }
+
+  /*
+   * Extra safety:
+   * Keep only Japanese animation.
+   */
+
+  anime = anime.filter(
+    x =>
+      (x.genre_ids || []).includes(16) &&
+      (
+        x.origin_country || []
+      ).includes("JP")
   );
 
-  return (data.results || [])
-    .filter(
-      x => isAnime(x)
-    )
-    .sort(
-      (a, b) =>
-        (b.popularity || 0) -
-        (a.popularity || 0)
-    )
+  anime =
+    sortPopularity(
+      dedupe(
+        anime.map(x => ({
+          ...x,
+          media_type: "tv"
+        }))
+      )
+    );
+
+  return anime
     .map(seriesMeta)
     .slice(0, 100);
 }
 
-/*
- * CATALOG HANDLER
- */
+/* =========================================================
+   CATALOG HANDLER
+========================================================= */
+
 builder.defineCatalogHandler(
   async args => {
     let metas = [];
 
     try {
       switch (args.id) {
+
         case "trending-kenya":
-          metas = await trendingKenya();
+          metas =
+            await trendingKenya();
           break;
 
         case "airing-today":
-          metas = await airingToday();
+          metas =
+            await airingToday();
           break;
 
         case "new-episodes":
-          metas = await newEpisodes();
+          metas =
+            await newEpisodes();
           break;
 
         case "calendar-videos":
-          metas = await calendarVideos();
+          metas =
+            await calendarVideos();
+          break;
+
+        case "top10-week":
+          metas =
+            await top10Week();
           break;
 
         case "top10-movies-week":
-          metas = await top10MoviesWeek();
+          metas =
+            await top10MoviesWeek();
           break;
 
         case "top10-series-week":
-          metas = await top10SeriesWeek();
+          metas =
+            await top10SeriesWeek();
           break;
 
         case "new-releases":
-          metas = await newReleases();
-          break;
-
-        case "anime-movies":
-          metas = await animeMovies();
+          metas =
+            await newReleases();
           break;
 
         case "anime-series":
-          metas = await animeSeries();
+          metas =
+            await animeSeries();
           break;
 
         default:
           metas = [];
       }
+
     } catch (error) {
+
       console.error(
         `Catalog ${args.id} failed:`,
         error
       );
+
     }
 
     const skip =
-      Number(args.extra?.skip || 0);
+      Number(
+        args.extra?.skip || 0
+      );
 
     return {
       metas: metas.slice(
@@ -675,17 +882,25 @@ builder.defineCatalogHandler(
       ),
 
       cacheMaxAge: 900,
+
       staleRevalidate: 1800,
+
       staleError: 86400
     };
   }
 );
 
+/* =========================================================
+   START SERVER
+========================================================= */
+
 serveHTTP(
   builder.getInterface(),
-  { port: PORT }
+  {
+    port: PORT
+  }
 );
 
 console.log(
-  `TMDB WuPlay Home Catalogs v2.0 listening on ${PORT}`
+  `TMDB WuPlay Home Catalogs v2.1 listening on port ${PORT}`
 );
