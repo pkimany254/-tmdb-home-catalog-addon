@@ -7,7 +7,7 @@ const KEY = process.env.TMDB_API_KEY;
 
 const manifest = {
   id: "org.pkimany254.tmdb-home-catalogs",
-  version: "3.0.1",
+  version: "3.2.0",
   name: "TMDB WuPlay Home Catalogs",
   description: "Catalog-only WuPlay/Stremio addon powered by TMDB.",
   resources: ["catalog"],
@@ -67,7 +67,13 @@ const manifest = {
       type: "series",
       name: "Trending Anime Series",
       extra: [{ name: "skip", isRequired: false }]
-    }
+    },
+    {
+  id: "trending-animation",
+  type: "movie",
+  name: "Trending Animation",
+  extra: [{ name: "skip", isRequired: false }]
+}
   ]
 };
 
@@ -135,7 +141,9 @@ function movieMeta(x) {
     background: img(x.backdrop_path, "w1280"),
     description: x.overview || undefined,
     releaseInfo: x.release_date || undefined,
-    imdbRating: x.vote_average || undefined
+    imdbRating: x.vote_average || undefined,
+_genreIds: x.genre_ids || [],
+_mediaType: "movie"
   };
 }
 
@@ -148,7 +156,9 @@ function seriesMeta(x) {
     background: img(x.backdrop_path, "w1280"),
     description: x.overview || undefined,
     releaseInfo: x.first_air_date || undefined,
-    imdbRating: x.vote_average || undefined
+imdbRating: x.vote_average || undefined,
+_genreIds: x.genre_ids || [],
+_mediaType: "series"
   };
 }
 
@@ -167,6 +177,34 @@ function isAnime(x) {
 
 function withoutAnime(items) {
   return items.filter(x => !isAnime(x));
+}
+
+const EXCLUDED_TV_GENRES = new Set([
+  99,     // Documentary
+  10402,  // Music
+  10763,  // News
+  10764,  // Reality
+  10766,  // Soap
+  10767   // Talk
+]);
+
+const EXCLUDED_MOVIE_GENRES = new Set([
+  99,     // Documentary
+  10402,  // Music
+  10770   // TV Movie
+]);
+
+function withoutExcludedGenres(items, mediaType) {
+  const excluded =
+    mediaType === "movie"
+      ? EXCLUDED_MOVIE_GENRES
+      : EXCLUDED_TV_GENRES;
+
+  return items.filter(item =>
+    !(item.genre_ids || []).some(id =>
+      excluded.has(id)
+    )
+  );
 }
 
 function sortPopularity(items) {
@@ -802,6 +840,62 @@ async function animeSeries() {
 }
 
 /* =========================================================
+   10. TRENDING ANIMATION
+========================================================= */
+
+async function trendingAnimation() {
+  const [movies, tv] =
+    await Promise.all([
+      tmdb("/discover/movie", {
+        with_genres: "16",
+        sort_by: "popularity.desc",
+        include_adult: "false",
+        page: 1
+      }),
+
+      tmdb("/discover/tv", {
+        with_genres: "16",
+        sort_by: "popularity.desc",
+        include_adult: "false",
+        page: 1
+      })
+    ]);
+
+  let movieItems =
+    withoutAnime(
+      (movies.results || []).map(
+        x => ({
+          ...x,
+          media_type: "movie"
+        })
+      )
+    );
+
+  movieItems =
+    await digitalOnly(movieItems);
+
+  const seriesItems =
+    withoutAnime(
+      (tv.results || []).map(
+        x => ({
+          ...x,
+          media_type: "tv"
+        })
+      )
+    );
+
+  const combined =
+    sortPopularity([
+      ...movieItems,
+      ...seriesItems
+    ]);
+
+  return mixedMeta(
+    dedupe(combined)
+  ).slice(0, 100);
+}
+
+/* =========================================================
    CATALOG HANDLER
 ========================================================= */
 
@@ -853,10 +947,15 @@ builder.defineCatalogHandler(
           break;
 
         case "anime-series":
-          metas =
-            await animeSeries();
-          break;
+  metas =
+    await animeSeries();
+  break;
 
+case "trending-animation":
+  metas =
+    await trendingAnimation();
+  break;
+          
         default:
           metas = [];
       }
@@ -871,17 +970,31 @@ builder.defineCatalogHandler(
     }
 
     const skip =
-      Number(
-        args.extra?.skip || 0
-      );
+  Number(
+    args.extra?.skip || 0
+  );
+
+// Global poster filter
+metas = metas.filter(meta =>
+  Boolean(meta.poster)
+);
+
+// Global unwanted-genre filter
+metas = metas.filter(meta =>
+  !(meta._genreIds || []).some(id =>
+    (
+      meta._mediaType === "movie"
+        ? EXCLUDED_MOVIE_GENRES
+        : EXCLUDED_TV_GENRES
+    ).has(id)
+  )
+);
 
 return {
-  metas: metas
-    .filter(meta => Boolean(meta.poster))
-    .slice(
-      skip,
-      skip + 100
-    ),
+  metas: metas.slice(
+    skip,
+    skip + 100
+  ),
 
       cacheMaxAge: 900,
 
@@ -904,5 +1017,5 @@ serveHTTP(
 );
 
 console.log(
-  `TMDB WuPlay Home Catalogs v3.0.1 listening on port ${PORT}`
+  `TMDB WuPlay Home Catalogs v3.2.0 listening on port ${PORT}`
 );
