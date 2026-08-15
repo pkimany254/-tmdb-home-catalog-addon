@@ -1351,11 +1351,38 @@ async function nowPlaying() {
 --------------------------------------------------------- */
 
 async function upcomingMovies() {
+  const today =
+    new Date()
+      .toISOString()
+      .split("T")[0];
+
+  const endOfYear =
+    `${new Date().getFullYear()}-12-31`;
+
+  // Start tomorrow so movies releasing today
+  // stay in Newly Released instead.
+  const tomorrowDate =
+    new Date();
+
+  tomorrowDate.setDate(
+    tomorrowDate.getDate() + 1
+  );
+
+  const tomorrow =
+    tomorrowDate
+      .toISOString()
+      .split("T")[0];
+
   let movies = await tmdbPages(
-  "/movie/upcoming",
-  {},
-  3
-);
+    "/discover/movie",
+    {
+      sort_by: "primary_release_date.asc",
+      "primary_release_date.gte": tomorrow,
+      "primary_release_date.lte": endOfYear,
+      include_adult: "false"
+    },
+    3
+  );
 
   movies =
     withoutAnime(movies);
@@ -1389,14 +1416,34 @@ async function upcomingMovies() {
 --------------------------------------------------------- */
 
 async function newlyReleasedMovies() {
+  const today =
+    new Date()
+      .toISOString()
+      .split("T")[0];
+
+  const threeMonthsAgo =
+    new Date();
+
+  threeMonthsAgo.setMonth(
+    threeMonthsAgo.getMonth() - 3
+  );
+
+  const startDate =
+    threeMonthsAgo
+      .toISOString()
+      .split("T")[0];
+
   let movies = await tmdbPages(
-  "/discover/movie",
-  {
-    sort_by: "primary_release_date.desc",
-    include_adult: "false"
-  },
-  3
-);
+    "/discover/movie",
+    {
+      sort_by: "primary_release_date.desc",
+      "primary_release_date.gte": startDate,
+      "primary_release_date.lte": today,
+      include_adult: "false"
+    },
+    3
+  );
+
   movies =
     withoutAnime(movies);
 
@@ -1589,14 +1636,33 @@ async function onTheAir() {
 --------------------------------------------------------- */
 
 async function newlyReleasedSeries() {
+  const today =
+    new Date()
+      .toISOString()
+      .split("T")[0];
+
+  const threeMonthsAgo =
+    new Date();
+
+  threeMonthsAgo.setMonth(
+    threeMonthsAgo.getMonth() - 3
+  );
+
+  const startDate =
+    threeMonthsAgo
+      .toISOString()
+      .split("T")[0];
+
   let series = await tmdbPages(
-  "/discover/tv",
-  {
-    sort_by: "first_air_date.desc",
-    include_adult: "false"
-  },
-  3
-);
+    "/discover/tv",
+    {
+      sort_by: "first_air_date.desc",
+      "first_air_date.gte": startDate,
+      "first_air_date.lte": today,
+      include_adult: "false"
+    },
+    3
+  );
 
   series =
     withoutAnime(series);
@@ -1631,19 +1697,37 @@ async function newlyReleasedSeries() {
 
 async function upcomingSeries() {
   const today =
-  new Date()
-    .toISOString()
-    .split("T")[0];
+    new Date()
+      .toISOString()
+      .split("T")[0];
 
-let series = await tmdbPages(
-  "/discover/tv",
-  {
-    sort_by: "popularity.desc",
-    "first_air_date.gte": today,
-    include_adult: "false"
-  },
-  3
-);
+  const endOfYear =
+    `${new Date().getFullYear()}-12-31`;
+
+  // Start tomorrow so series airing today
+  // stay in Airing Today instead.
+  const tomorrowDate =
+    new Date();
+
+  tomorrowDate.setDate(
+    tomorrowDate.getDate() + 1
+  );
+
+  const tomorrow =
+    tomorrowDate
+      .toISOString()
+      .split("T")[0];
+
+  let series = await tmdbPages(
+    "/discover/tv",
+    {
+      sort_by: "first_air_date.asc",
+      "first_air_date.gte": tomorrow,
+      "first_air_date.lte": endOfYear,
+      include_adult: "false"
+    },
+    3
+  );
 
   series =
     withoutAnime(series);
@@ -1666,9 +1750,7 @@ let series = await tmdbPages(
       media_type: "tv"
     }));
 
-  return sortPopularity(
-    dedupe(series)
-  )
+  return dedupe(series)
     .map(seriesMeta)
     .slice(0, 100);
 }
