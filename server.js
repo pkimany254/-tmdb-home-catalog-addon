@@ -336,6 +336,24 @@ function day(offset = 0) {
   return d.toISOString().slice(0, 10);
 }
 
+async function tmdbPages(endpoint, params = {}, pages = 3) {
+  let results = [];
+
+  for (let page = 1; page <= pages; page++) {
+    const data = await tmdb(
+      endpoint,
+      { ...params, page },
+      900
+    );
+
+    results.push(
+      ...(data.results || [])
+    );
+  }
+
+  return results;
+}
+
 /* =========================================================
    DIGITAL RELEASE FILTER
 ========================================================= */
@@ -1176,13 +1194,11 @@ async function trendingSeries() {
 --------------------------------------------------------- */
 
 async function popularMovies() {
-  const data = await tmdb(
-    "/movie/popular",
-    { page: 1 }
-  );
-
-  let movies =
-    data.results || [];
+  let movies = await tmdbPages(
+  "/movie/popular",
+  {},
+  3
+);
 
   movies =
     withoutAnime(movies);
@@ -1218,13 +1234,11 @@ async function popularMovies() {
 --------------------------------------------------------- */
 
 async function topRatedMovies() {
-  const data = await tmdb(
-    "/movie/top_rated",
-    { page: 1 }
-  );
-
-  let movies =
-    data.results || [];
+  let movies = await tmdbPages(
+  "/movie/top_rated",
+  {},
+  3
+);
 
   movies =
     withoutAnime(movies);
@@ -1259,18 +1273,14 @@ async function topRatedMovies() {
 --------------------------------------------------------- */
 
 async function mostRatedMovies() {
-  const data = await tmdb(
-    "/discover/movie",
-    {
-      sort_by: "vote_count.desc",
-      include_adult: "false",
-      page: 1
-    }
-  );
-
-  let movies =
-    data.results || [];
-
+ let movies = await tmdbPages(
+  "/discover/movie",
+  {
+    sort_by: "vote_count.desc",
+    include_adult: "false"
+  },
+  3
+);
   movies =
     withoutAnime(movies);
 
@@ -1303,13 +1313,11 @@ async function mostRatedMovies() {
 --------------------------------------------------------- */
 
 async function nowPlaying() {
-  const data = await tmdb(
-    "/movie/now_playing",
-    { page: 1 }
-  );
-
-  let movies =
-    data.results || [];
+  let movies = await tmdbPages(
+  "/movie/now_playing",
+  {},
+  3
+);
 
   movies =
     withoutAnime(movies);
@@ -1343,13 +1351,11 @@ async function nowPlaying() {
 --------------------------------------------------------- */
 
 async function upcomingMovies() {
-  const data = await tmdb(
-    "/movie/upcoming",
-    { page: 1 }
-  );
-
-  let movies =
-    data.results || [];
+  let movies = await tmdbPages(
+  "/movie/upcoming",
+  {},
+  3
+);
 
   movies =
     withoutAnime(movies);
@@ -1383,18 +1389,14 @@ async function upcomingMovies() {
 --------------------------------------------------------- */
 
 async function newlyReleasedMovies() {
-  const data = await tmdb(
-    "/discover/movie",
-    {
-      sort_by: "primary_release_date.desc",
-      include_adult: "false",
-      page: 1
-    }
-  );
-
-  let movies =
-    data.results || [];
-
+  let movies = await tmdbPages(
+  "/discover/movie",
+  {
+    sort_by: "primary_release_date.desc",
+    include_adult: "false"
+  },
+  3
+);
   movies =
     withoutAnime(movies);
 
@@ -1430,13 +1432,11 @@ async function newlyReleasedMovies() {
 --------------------------------------------------------- */
 
 async function popularSeries() {
-  const data = await tmdb(
-    "/tv/popular",
-    { page: 1 }
-  );
-
-  let series =
-    data.results || [];
+  let series = await tmdbPages(
+  "/tv/popular",
+  {},
+  3
+);
 
   series =
     withoutAnime(series);
@@ -1472,13 +1472,11 @@ async function popularSeries() {
 --------------------------------------------------------- */
 
 async function topRatedSeries() {
-  const data = await tmdb(
-    "/tv/top_rated",
-    { page: 1 }
-  );
-
-  let series =
-    data.results || [];
+  let series = await tmdbPages(
+  "/tv/top_rated",
+  {},
+  3
+);
 
   series =
     withoutAnime(series);
@@ -1513,17 +1511,14 @@ async function topRatedSeries() {
 --------------------------------------------------------- */
 
 async function mostRatedSeries() {
-  const data = await tmdb(
-    "/discover/tv",
-    {
-      sort_by: "vote_count.desc",
-      include_adult: "false",
-      page: 1
-    }
-  );
-
-  let series =
-    data.results || [];
+  let series = await tmdbPages(
+  "/discover/tv",
+  {
+    sort_by: "vote_count.desc",
+    include_adult: "false"
+  },
+  3
+);
 
   series =
     withoutAnime(series);
@@ -1557,14 +1552,11 @@ async function mostRatedSeries() {
 --------------------------------------------------------- */
 
 async function onTheAir() {
-  const data = await tmdb(
-    "/tv/on_the_air",
-    { page: 1 }
-  );
-
-  let series =
-    data.results || [];
-
+  let series = await tmdbPages(
+  "/tv/on_the_air",
+  {},
+  3
+);
   series =
     withoutAnime(series);
 
@@ -1597,17 +1589,14 @@ async function onTheAir() {
 --------------------------------------------------------- */
 
 async function newlyReleasedSeries() {
-  const data = await tmdb(
-    "/discover/tv",
-    {
-      sort_by: "first_air_date.desc",
-      include_adult: "false",
-      page: 1
-    }
-  );
-
-  let series =
-    data.results || [];
+  let series = await tmdbPages(
+  "/discover/tv",
+  {
+    sort_by: "first_air_date.desc",
+    include_adult: "false"
+  },
+  3
+);
 
   series =
     withoutAnime(series);
@@ -1642,22 +1631,19 @@ async function newlyReleasedSeries() {
 
 async function upcomingSeries() {
   const today =
-    new Date()
-      .toISOString()
-      .split("T")[0];
+  new Date()
+    .toISOString()
+    .split("T")[0];
 
-  const data = await tmdb(
-    "/discover/tv",
-    {
-      sort_by: "popularity.desc",
-      "first_air_date.gte": today,
-      include_adult: "false",
-      page: 1
-    }
-  );
-
-  let series =
-    data.results || [];
+let series = await tmdbPages(
+  "/discover/tv",
+  {
+    sort_by: "popularity.desc",
+    "first_air_date.gte": today,
+    include_adult: "false"
+  },
+  3
+);
 
   series =
     withoutAnime(series);
