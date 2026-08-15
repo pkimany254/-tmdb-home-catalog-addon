@@ -1441,7 +1441,7 @@ async function newlyReleasedMovies() {
       "primary_release_date.lte": today,
       include_adult: "false"
     },
-    5
+    10
   );
 
   movies =
@@ -1663,7 +1663,7 @@ async function newlyReleasedSeries() {
       "first_air_date.lte": today,
       include_adult: "false"
     },
-    5
+    10
   );
 
   series =
