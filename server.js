@@ -7,7 +7,7 @@ const KEY = process.env.TMDB_API_KEY;
 
 const manifest = {
   id: "org.pkimany254.tmdb-home-catalogs",
-  version: "3.2.0",
+  version: "1.3.0",
   name: "TMDB WuPlay Home Catalogs",
   description: "Catalog-only WuPlay/Stremio addon powered by TMDB.",
   resources: ["catalog"],
@@ -72,6 +72,18 @@ const manifest = {
   id: "trending-animation",
   type: "movie",
   name: "Trending Animation",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "trending-movies",
+  type: "movie",
+  name: "Trending Movies",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "trending-series",
+  type: "series",
+  name: "Trending Series",
   extra: [{ name: "skip", isRequired: false }]
 }
   ]
@@ -896,6 +908,98 @@ async function trendingAnimation() {
 }
 
 /* =========================================================
+   11. TRENDING MOVIES
+   Movies only — excludes animation and anime
+========================================================= */
+
+async function trendingMovies() {
+  let movies = await tmdb(
+    "/trending/movie/week",
+    { page: 1 }
+  );
+
+  movies =
+    withoutAnime(
+      movies.results || []
+    );
+
+  // Remove all animation
+  movies =
+    movies.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  // Apply the existing unwanted-genre filter
+  movies =
+    withoutExcludedGenres(
+      movies,
+      "movie"
+    );
+
+  // Require a digital release
+  movies =
+    await digitalOnly(movies);
+
+  // Add media type for metadata
+  movies =
+    movies.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  return sortPopularity(
+    dedupe(movies)
+  )
+    .map(movieMeta)
+    .slice(0, 100);
+}
+
+/* =========================================================
+   12. TRENDING SERIES
+   Series only — excludes animation and anime
+========================================================= */
+
+async function trendingSeries() {
+  let series = await tmdb(
+    "/trending/tv/week",
+    { page: 1 }
+  );
+
+  series =
+    withoutAnime(
+      series.results || []
+    );
+
+  // Remove all animation
+  series =
+    series.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  // Apply the existing unwanted-genre filter
+  series =
+    withoutExcludedGenres(
+      series,
+      "series"
+    );
+
+  // Add media type for metadata
+  series =
+    series.map(x => ({
+      ...x,
+      media_type: "tv"
+    }));
+
+  return sortPopularity(
+    dedupe(series)
+  )
+    .map(seriesMeta)
+    .slice(0, 100);
+}
+
+/* =========================================================
    CATALOG HANDLER
 ========================================================= */
 
@@ -954,6 +1058,16 @@ builder.defineCatalogHandler(
 case "trending-animation":
   metas =
     await trendingAnimation();
+  break;
+          
+          case "trending-movies":
+  metas =
+    await trendingMovies();
+  break;
+
+case "trending-series":
+  metas =
+    await trendingSeries();
   break;
           
         default:
@@ -1017,5 +1131,5 @@ serveHTTP(
 );
 
 console.log(
-  `TMDB WuPlay Home Catalogs v3.2.0 listening on port ${PORT}`
+  `TMDB WuPlay Home Catalogs v1.3.0 listening on port ${PORT}`
 );
