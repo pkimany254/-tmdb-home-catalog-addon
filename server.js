@@ -1359,8 +1359,6 @@ async function upcomingMovies() {
   const endOfYear =
     `${new Date().getFullYear()}-12-31`;
 
-  // Start tomorrow so movies releasing today
-  // stay in Newly Released instead.
   const tomorrowDate =
     new Date();
 
@@ -1376,12 +1374,12 @@ async function upcomingMovies() {
   let movies = await tmdbPages(
     "/discover/movie",
     {
-      sort_by: "primary_release_date.asc",
+      sort_by: "popularity.desc",
       "primary_release_date.gte": tomorrow,
       "primary_release_date.lte": endOfYear,
       include_adult: "false"
     },
-    3
+    5
   );
 
   movies =
@@ -1405,7 +1403,9 @@ async function upcomingMovies() {
       media_type: "movie"
     }));
 
-  return dedupe(movies)
+  return sortPopularity(
+    dedupe(movies)
+  )
     .map(movieMeta)
     .slice(0, 100);
 }
@@ -1436,12 +1436,12 @@ async function newlyReleasedMovies() {
   let movies = await tmdbPages(
     "/discover/movie",
     {
-      sort_by: "primary_release_date.desc",
+      sort_by: "popularity.desc",
       "primary_release_date.gte": startDate,
       "primary_release_date.lte": today,
       include_adult: "false"
     },
-    3
+    5
   );
 
   movies =
@@ -1465,7 +1465,9 @@ async function newlyReleasedMovies() {
       media_type: "movie"
     }));
 
-  return dedupe(movies)
+  return sortPopularity(
+    dedupe(movies)
+  )
     .map(movieMeta)
     .slice(0, 100);
 }
@@ -1656,12 +1658,12 @@ async function newlyReleasedSeries() {
   let series = await tmdbPages(
     "/discover/tv",
     {
-      sort_by: "first_air_date.desc",
+      sort_by: "popularity.desc",
       "first_air_date.gte": startDate,
       "first_air_date.lte": today,
       include_adult: "false"
     },
-    3
+    5
   );
 
   series =
@@ -1685,7 +1687,9 @@ async function newlyReleasedSeries() {
       media_type: "tv"
     }));
 
-  return dedupe(series)
+  return sortPopularity(
+    dedupe(series)
+  )
     .map(seriesMeta)
     .slice(0, 100);
 }
@@ -1704,8 +1708,6 @@ async function upcomingSeries() {
   const endOfYear =
     `${new Date().getFullYear()}-12-31`;
 
-  // Start tomorrow so series airing today
-  // stay in Airing Today instead.
   const tomorrowDate =
     new Date();
 
@@ -1721,12 +1723,12 @@ async function upcomingSeries() {
   let series = await tmdbPages(
     "/discover/tv",
     {
-      sort_by: "first_air_date.asc",
+      sort_by: "popularity.desc",
       "first_air_date.gte": tomorrow,
       "first_air_date.lte": endOfYear,
       include_adult: "false"
     },
-    3
+    5
   );
 
   series =
@@ -1750,7 +1752,9 @@ async function upcomingSeries() {
       media_type: "tv"
     }));
 
-  return dedupe(series)
+  return sortPopularity(
+    dedupe(series)
+  )
     .map(seriesMeta)
     .slice(0, 100);
 }
