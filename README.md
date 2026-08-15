@@ -1,125 +1,223 @@
-# TMDB WuPlay Home Catalogs
+# TMDB WuPlay Home Catalog Addon
 
-A catalog-only Stremio/WuPlay addon powered by TMDB.
+A lightweight Stremio catalog addon designed specifically for **WuPlay**, using **TMDB** as the primary source for catalog discovery and metadata.
 
-This addon provides curated home-page catalogs for WuPlay. It provides catalog data only and does not provide streams.
+The addon provides curated homepage catalogs combining movies and series, with separate rows for anime and animation.
 
 ## Current Version
 
-**1.3.0**
+**v1.3.0**
+
+---
 
 ## Catalogs
 
-### General Discovery
+### 🇰🇪 Trending in Kenya
+A mixed movie + series catalog based on TMDB popularity with the Kenya watch region.
 
-- **Trending in Kenya**
-  - Mixed movies and series
-  - Uses Kenya as the target region
-  - Sorted by popularity
-  - Anime excluded
-  - Movies require a digital release
+- Movies + series combined
+- Kenya region
+- Sorted by popularity
+- Anime excluded
+- No-poster titles excluded
+- Movies require a digital release
 
-- **New Releases**
-  - Mixed movies and series
-  - Recent releases from the last 14 days
-  - Focuses on popular titles
-  - Anime excluded
-  - Movies require a digital release
+### 🎬 Trending Movies
+Movies currently trending according to TMDB.
 
-- **New Episodes**
-  - Popular series with recent episode activity
-  - Covers the previous 7 days
-  - Anime excluded
+- Movies only
+- Anime excluded
+- Animation excluded
+- Unwanted genres excluded
+- No-poster titles excluded
+- Digital-release requirement
+- Sorted by trending/popularity
 
-- **Airing Today**
-  - Popular TV series airing today
-  - Anime excluded
+### 📺 Trending Series
+Series currently trending according to TMDB.
 
-### Top 10
+- Series only
+- Anime excluded
+- Animation excluded
+- Unwanted genres excluded
+- No-poster titles excluded
+- Sorted by trending/popularity
 
-- **Top 10 This Week**
-  - Mixed movies and series
-  - Based on TMDB weekly trending
-  - Limited to releases from the current year
-  - Anime excluded
-  - Movies require a digital release
+### 🎨 Trending Animation
+A dedicated catalog for animated movies and series.
 
-- **Top 10 Movies This Week**
-  - Movies only
-  - Based on TMDB weekly trending
-  - Current-year releases only
-  - Anime excluded
-  - Movies require a digital release
+- Movies + series
+- Animation focused
+- Separate from normal movie/series rows
+- Anime separated into the dedicated anime catalog
+- No-poster titles excluded
 
-- **Top 10 Series This Week**
-  - Series only
-  - Based on TMDB weekly trending
-  - Current-year releases only
-  - Anime excluded
+### 🍥 Trending Anime Series
+A dedicated catalog for trending anime series.
 
-### Upcoming
+- Anime series only
+- Japanese-origin animation
+- No-poster titles excluded
+- Expanded coverage
 
-- **Calendar Videos**
-  - Mixed movies and series
-  - Covers upcoming releases over the next 14 days
-  - Sorted by popularity
-  - Anime excluded
-  - Movies require a digital release
+### 🆕 New Releases
+Recent popular movies and series.
 
-### Anime
+- Mixed movies + series
+- Recent releases
+- Popularity filtering
+- Anime excluded
+- No-poster titles excluded
+- Movies require digital release
 
-- **Trending Anime Series**
-  - Anime series only
-  - Uses multiple TMDB discovery pages for broader coverage
-  - Japanese-origin animation
-  - Sorted by popularity
+### 🆕 New Episodes
+Recently released episodes from popular series.
 
-## Filtering
+- Popular series
+- Episodes released within the recent release window
+- Anime excluded
+- No-poster titles excluded
 
-### Anime
+### 📅 Calendar Videos
+Upcoming and recently scheduled content.
 
-Anime is excluded from the general catalogs so that anime can have its own dedicated section.
+- Movies + series
+- Calendar/release-date based
+- Popularity filtering
+- Anime excluded
+- No-poster titles excluded
 
-The general anime detection uses:
+### 🔥 Top 10 This Week
+Mixed movies + series based on weekly popularity.
+
+- Movies + series combined
+- Current-year releases
+- Anime excluded
+- No-poster titles excluded
+
+### 🔥 Top 10 Movies This Week
+Weekly top movies.
+
+- Movies only
+- Current-year releases
+- Anime/animation excluded
+- No-poster titles excluded
+- Digital-release filtering
+
+### 🔥 Top 10 Series This Week
+Weekly top series.
+
+- Series only
+- Current-year releases
+- Anime/animation excluded
+- No-poster titles excluded
+
+### 📺 Airing Today
+Series with episodes airing today.
+
+- Series only
+- Popularity focused
+- Anime excluded
+- No-poster titles excluded
+
+---
+
+## Global Filtering
+
+The addon applies common filtering to the general catalogs.
+
+### Poster requirement
+
+Titles without a TMDB poster are removed.
+
+This prevents entries such as podcasts, videos, or incomplete metadata records from appearing without artwork.
+
+### General genre exclusions
+
+The general catalogs exclude:
+
+- Documentary
+- Music
+- News
+- Reality
+- Soap
+- Talk
+- TV Movie (movies)
+
+Animation is **not globally excluded** because animated content has its own dedicated catalog.
+
+### Anime filtering
+
+Anime is separated from the normal movie and series catalogs.
+
+Anime is identified using:
 
 - TMDB Animation genre
 - Japanese origin
 
-The dedicated anime catalog uses a broader TMDB discovery search across multiple pages.
+A dedicated **Trending Anime Series** row is provided instead.
 
-### Digital Movie Releases
+---
 
-Movie catalogs use TMDB release-date information.
+## Movie Digital Release Filter
 
-Movies are included only when TMDB reports a digital release.
+Movies in applicable catalogs must have a TMDB digital release.
 
-This helps prevent unreleased theatrical titles and CAM-style releases from appearing in the normal movie catalogs.
+This helps prevent theatrical-only/CAM releases from appearing in the homepage catalogs.
 
-## Caching
+A TMDB digital release does **not** guarantee that a particular scraper or debrid provider already has the movie. It simply indicates that the movie has reached a digital release stage according to TMDB.
 
-Catalog responses are cached to reduce unnecessary TMDB API requests.
+---
 
-Default catalog cache:
+## Data Source
 
-- 15 minutes
+The addon uses:
 
-Stale revalidation:
+**TMDB (The Movie Database)**
 
-- 30 minutes
+for:
 
-Stale-error fallback:
+- Movie discovery
+- Series discovery
+- Popularity
+- Trending
+- Release dates
+- Genres
+- Posters
+- Metadata
+- Anime identification
+- Regional discovery
 
-- 24 hours
+The addon is designed as a **catalog provider**, not a stream scraper or debrid provider.
 
-TMDB digital-release information is cached for 24 hours.
+It does not provide video streams itself.
 
-## Environment Variables
+---
 
-The addon requires:
+## WuPlay
 
-`TMDB_API_KEY`
+The catalogs are designed for use with **WuPlay** as homepage/catalog rows.
 
-Example:
+The addon focuses on providing clean catalog data so WuPlay can display:
+
+- Posters
+- Titles
+- Movies
+- Series
+- Release information
+- Popularity-based discovery
+
+Stream sources continue to come from the user's configured streaming/scraper/debrid setup.
+
+---
+
+## Deployment
+
+The addon can be deployed using services such as Railway.
+
+Typical deployment structure:
 
 ```text
-TMDB_API_KEY=your_tmdb_api_key
+server.js
+package.json
+README.md
