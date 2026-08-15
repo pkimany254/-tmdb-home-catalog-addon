@@ -1004,7 +1004,7 @@ async function trendingAnimation() {
 ========================================================= */
 
 async function trendingMovies() {
-  const target = 30;
+  const target = 70;
   const maxPages = 10;
 
   let validMovies = [];
@@ -1098,7 +1098,7 @@ async function trendingMovies() {
 ========================================================= */
 
 async function trendingSeries() {
-  const target = 30;
+  const target = 70;
   const maxPages = 10;
 
   let validSeries = [];
