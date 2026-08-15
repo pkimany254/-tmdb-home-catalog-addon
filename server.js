@@ -1004,45 +1004,95 @@ async function trendingMovies() {
 /* =========================================================
    12. TRENDING SERIES
    Series only — excludes animation and anime
+   Keeps fetching pages until 30 valid series are found
 ========================================================= */
 
 async function trendingSeries() {
-  let series = await tmdb(
-    "/trending/tv/week",
-    { page: 1 }
-  );
+  const target = 30;
+  const maxPages = 10;
 
-  series =
-    withoutAnime(
-      series.results || []
+  let validSeries = [];
+  let page = 1;
+
+  while (
+    validSeries.length < target &&
+    page <= maxPages
+  ) {
+    const data = await tmdb(
+      "/trending/tv/week",
+      { page },
+      900
     );
 
-  // Remove all animation
-  series =
-    series.filter(
-      x =>
-        !(x.genre_ids || []).includes(16)
+    let series =
+      data.results || [];
+
+    if (!series.length) {
+      break;
+    }
+
+    // Remove anime
+    series =
+      withoutAnime(series);
+
+    // Remove all animation
+    series =
+      series.filter(
+        x =>
+          !(x.genre_ids || []).includes(16)
+      );
+
+    // Apply existing unwanted-genre filter
+    series =
+      withoutExcludedGenres(
+        series,
+        "series"
+      );
+
+    // Add media type
+    series =
+      series.map(x => ({
+        ...x,
+        media_type: "tv"
+      }));
+
+    /*
+     * Remove duplicates against series
+     * already collected.
+     */
+    const existingIds =
+      new Set(
+        validSeries.map(x => x.id)
+      );
+
+    series =
+      series.filter(
+        x => !existingIds.has(x.id)
+      );
+
+    /*
+     * Keep only series with posters.
+     * The global poster filter will also
+     * run later, but doing it here helps
+     * us reach 30 valid results faster.
+     */
+    series =
+      series.filter(
+        x => Boolean(x.poster_path)
+      );
+
+    validSeries.push(
+      ...series
     );
 
-  // Apply the existing unwanted-genre filter
-  series =
-    withoutExcludedGenres(
-      series,
-      "series"
-    );
-
-  // Add media type for metadata
-  series =
-    series.map(x => ({
-      ...x,
-      media_type: "tv"
-    }));
+    page++;
+  }
 
   return sortPopularity(
-    dedupe(series)
+    dedupe(validSeries)
   )
     .map(seriesMeta)
-    .slice(0, 100);
+    .slice(0, target);
 }
 
 /* =========================================================
