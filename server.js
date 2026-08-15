@@ -1004,7 +1004,7 @@ async function trendingAnimation() {
 ========================================================= */
 
 async function trendingMovies() {
-  const target = 70;
+  const target = 100;
   const maxPages = 10;
 
   let validMovies = [];
@@ -1098,7 +1098,7 @@ async function trendingMovies() {
 ========================================================= */
 
 async function trendingSeries() {
-  const target = 70;
+  const target = 100;
   const maxPages = 10;
 
   let validSeries = [];
@@ -1197,7 +1197,7 @@ async function popularMovies() {
   let movies = await tmdbPages(
   "/movie/popular",
   {},
-  3
+  10
 );
 
   movies =
@@ -1484,7 +1484,7 @@ async function popularSeries() {
   let series = await tmdbPages(
   "/tv/popular",
   {},
-  3
+  10
 );
 
   series =
