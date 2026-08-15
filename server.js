@@ -85,6 +85,78 @@ const manifest = {
   type: "series",
   name: "Trending Series",
   extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "popular-movies",
+  type: "movie",
+  name: "Popular Movies",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "top-rated-movies",
+  type: "movie",
+  name: "Top Rated Movies",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "most-rated-movies",
+  type: "movie",
+  name: "Most Rated Movies",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "now-playing",
+  type: "movie",
+  name: "Now Playing",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "upcoming-movies",
+  type: "movie",
+  name: "Upcoming Movies",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "newly-released-movies",
+  type: "movie",
+  name: "Newly Released Movies",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "popular-series",
+  type: "series",
+  name: "Popular Series",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "top-rated-series",
+  type: "series",
+  name: "Top Rated Series",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "most-rated-series",
+  type: "series",
+  name: "Most Rated Series",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "on-the-air",
+  type: "series",
+  name: "On The Air",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "upcoming-series",
+  type: "series",
+  name: "Upcoming Series",
+  extra: [{ name: "skip", isRequired: false }]
+},
+{
+  id: "newly-released-series",
+  type: "series",
+  name: "Newly Released Series",
+  extra: [{ name: "skip", isRequired: false }]
 }
   ]
 };
@@ -1096,6 +1168,526 @@ async function trendingSeries() {
 }
 
 /* =========================================================
+   DISCOVERY — MOVIES
+========================================================= */
+
+/* ---------------------------------------------------------
+   POPULAR MOVIES
+--------------------------------------------------------- */
+
+async function popularMovies() {
+  const data = await tmdb(
+    "/movie/popular",
+    { page: 1 }
+  );
+
+  let movies =
+    data.results || [];
+
+  movies =
+    withoutAnime(movies);
+
+  movies =
+    movies.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  movies =
+    withoutExcludedGenres(
+      movies,
+      "movie"
+    );
+
+  movies =
+    movies.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  return sortPopularity(
+    dedupe(movies)
+  )
+    .map(movieMeta)
+    .slice(0, 100);
+}
+
+
+/* ---------------------------------------------------------
+   TOP RATED MOVIES
+--------------------------------------------------------- */
+
+async function topRatedMovies() {
+  const data = await tmdb(
+    "/movie/top_rated",
+    { page: 1 }
+  );
+
+  let movies =
+    data.results || [];
+
+  movies =
+    withoutAnime(movies);
+
+  movies =
+    movies.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  movies =
+    withoutExcludedGenres(
+      movies,
+      "movie"
+    );
+
+  movies =
+    movies.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  return dedupe(movies)
+    .map(movieMeta)
+    .slice(0, 100);
+}
+
+
+/* ---------------------------------------------------------
+   MOST RATED MOVIES
+   Sorted by number of TMDB votes
+--------------------------------------------------------- */
+
+async function mostRatedMovies() {
+  const data = await tmdb(
+    "/discover/movie",
+    {
+      sort_by: "vote_count.desc",
+      include_adult: "false",
+      page: 1
+    }
+  );
+
+  let movies =
+    data.results || [];
+
+  movies =
+    withoutAnime(movies);
+
+  movies =
+    movies.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  movies =
+    withoutExcludedGenres(
+      movies,
+      "movie"
+    );
+
+  movies =
+    movies.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  return dedupe(movies)
+    .map(movieMeta)
+    .slice(0, 100);
+}
+
+
+/* ---------------------------------------------------------
+   NOW PLAYING
+--------------------------------------------------------- */
+
+async function nowPlaying() {
+  const data = await tmdb(
+    "/movie/now_playing",
+    { page: 1 }
+  );
+
+  let movies =
+    data.results || [];
+
+  movies =
+    withoutAnime(movies);
+
+  movies =
+    movies.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  movies =
+    withoutExcludedGenres(
+      movies,
+      "movie"
+    );
+
+  movies =
+    movies.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  return dedupe(movies)
+    .map(movieMeta)
+    .slice(0, 100);
+}
+
+
+/* ---------------------------------------------------------
+   UPCOMING MOVIES
+--------------------------------------------------------- */
+
+async function upcomingMovies() {
+  const data = await tmdb(
+    "/movie/upcoming",
+    { page: 1 }
+  );
+
+  let movies =
+    data.results || [];
+
+  movies =
+    withoutAnime(movies);
+
+  movies =
+    movies.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  movies =
+    withoutExcludedGenres(
+      movies,
+      "movie"
+    );
+
+  movies =
+    movies.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  return dedupe(movies)
+    .map(movieMeta)
+    .slice(0, 100);
+}
+
+
+/* ---------------------------------------------------------
+   NEWLY RELEASED MOVIES
+--------------------------------------------------------- */
+
+async function newlyReleasedMovies() {
+  const data = await tmdb(
+    "/discover/movie",
+    {
+      sort_by: "primary_release_date.desc",
+      include_adult: "false",
+      page: 1
+    }
+  );
+
+  let movies =
+    data.results || [];
+
+  movies =
+    withoutAnime(movies);
+
+  movies =
+    movies.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  movies =
+    withoutExcludedGenres(
+      movies,
+      "movie"
+    );
+
+  movies =
+    movies.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  return dedupe(movies)
+    .map(movieMeta)
+    .slice(0, 100);
+}
+
+/* =========================================================
+   DISCOVERY — SERIES
+========================================================= */
+
+/* ---------------------------------------------------------
+   POPULAR SERIES
+--------------------------------------------------------- */
+
+async function popularSeries() {
+  const data = await tmdb(
+    "/tv/popular",
+    { page: 1 }
+  );
+
+  let series =
+    data.results || [];
+
+  series =
+    withoutAnime(series);
+
+  series =
+    series.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  series =
+    withoutExcludedGenres(
+      series,
+      "series"
+    );
+
+  series =
+    series.map(x => ({
+      ...x,
+      media_type: "tv"
+    }));
+
+  return sortPopularity(
+    dedupe(series)
+  )
+    .map(seriesMeta)
+    .slice(0, 100);
+}
+
+
+/* ---------------------------------------------------------
+   TOP RATED SERIES
+--------------------------------------------------------- */
+
+async function topRatedSeries() {
+  const data = await tmdb(
+    "/tv/top_rated",
+    { page: 1 }
+  );
+
+  let series =
+    data.results || [];
+
+  series =
+    withoutAnime(series);
+
+  series =
+    series.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  series =
+    withoutExcludedGenres(
+      series,
+      "series"
+    );
+
+  series =
+    series.map(x => ({
+      ...x,
+      media_type: "tv"
+    }));
+
+  return dedupe(series)
+    .map(seriesMeta)
+    .slice(0, 100);
+}
+
+
+/* ---------------------------------------------------------
+   MOST RATED SERIES
+   Sorted by number of TMDB votes
+--------------------------------------------------------- */
+
+async function mostRatedSeries() {
+  const data = await tmdb(
+    "/discover/tv",
+    {
+      sort_by: "vote_count.desc",
+      include_adult: "false",
+      page: 1
+    }
+  );
+
+  let series =
+    data.results || [];
+
+  series =
+    withoutAnime(series);
+
+  series =
+    series.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  series =
+    withoutExcludedGenres(
+      series,
+      "series"
+    );
+
+  series =
+    series.map(x => ({
+      ...x,
+      media_type: "tv"
+    }));
+
+  return dedupe(series)
+    .map(seriesMeta)
+    .slice(0, 100);
+}
+
+
+/* ---------------------------------------------------------
+   ON THE AIR
+--------------------------------------------------------- */
+
+async function onTheAir() {
+  const data = await tmdb(
+    "/tv/on_the_air",
+    { page: 1 }
+  );
+
+  let series =
+    data.results || [];
+
+  series =
+    withoutAnime(series);
+
+  series =
+    series.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  series =
+    withoutExcludedGenres(
+      series,
+      "series"
+    );
+
+  series =
+    series.map(x => ({
+      ...x,
+      media_type: "tv"
+    }));
+
+  return dedupe(series)
+    .map(seriesMeta)
+    .slice(0, 100);
+}
+
+
+/* ---------------------------------------------------------
+   NEWLY RELEASED SERIES
+--------------------------------------------------------- */
+
+async function newlyReleasedSeries() {
+  const data = await tmdb(
+    "/discover/tv",
+    {
+      sort_by: "first_air_date.desc",
+      include_adult: "false",
+      page: 1
+    }
+  );
+
+  let series =
+    data.results || [];
+
+  series =
+    withoutAnime(series);
+
+  series =
+    series.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  series =
+    withoutExcludedGenres(
+      series,
+      "series"
+    );
+
+  series =
+    series.map(x => ({
+      ...x,
+      media_type: "tv"
+    }));
+
+  return dedupe(series)
+    .map(seriesMeta)
+    .slice(0, 100);
+}
+
+/* ---------------------------------------------------------
+   UPCOMING SERIES
+   Series with a future first-air date
+--------------------------------------------------------- */
+
+async function upcomingSeries() {
+  const today =
+    new Date()
+      .toISOString()
+      .split("T")[0];
+
+  const data = await tmdb(
+    "/discover/tv",
+    {
+      sort_by: "popularity.desc",
+      "first_air_date.gte": today,
+      include_adult: "false",
+      page: 1
+    }
+  );
+
+  let series =
+    data.results || [];
+
+  series =
+    withoutAnime(series);
+
+  series =
+    series.filter(
+      x =>
+        !(x.genre_ids || []).includes(16)
+    );
+
+  series =
+    withoutExcludedGenres(
+      series,
+      "series"
+    );
+
+  series =
+    series.map(x => ({
+      ...x,
+      media_type: "tv"
+    }));
+
+  return sortPopularity(
+    dedupe(series)
+  )
+    .map(seriesMeta)
+    .slice(0, 100);
+}
+
+/* =========================================================
    CATALOG HANDLER
 ========================================================= */
 
@@ -1164,6 +1756,66 @@ case "trending-animation":
 case "trending-series":
   metas =
     await trendingSeries();
+  break;
+
+          case "popular-movies":
+  metas =
+    await popularMovies();
+  break;
+
+case "top-rated-movies":
+  metas =
+    await topRatedMovies();
+  break;
+
+case "most-rated-movies":
+  metas =
+    await mostRatedMovies();
+  break;
+
+case "now-playing":
+  metas =
+    await nowPlaying();
+  break;
+
+case "upcoming-movies":
+  metas =
+    await upcomingMovies();
+  break;
+
+case "newly-released-movies":
+  metas =
+    await newlyReleasedMovies();
+  break;
+
+          case "popular-series":
+  metas =
+    await popularSeries();
+  break;
+
+case "top-rated-series":
+  metas =
+    await topRatedSeries();
+  break;
+
+case "most-rated-series":
+  metas =
+    await mostRatedSeries();
+  break;
+
+case "on-the-air":
+  metas =
+    await onTheAir();
+  break;
+
+case "newly-released-series":
+  metas =
+    await newlyReleasedSeries();
+  break;
+
+          case "upcoming-series":
+  metas =
+    await upcomingSeries();
   break;
           
         default:
