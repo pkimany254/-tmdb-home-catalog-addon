@@ -910,49 +910,95 @@ async function trendingAnimation() {
 /* =========================================================
    11. TRENDING MOVIES
    Movies only — excludes animation and anime
+   Keeps fetching pages until 30 valid movies are found
 ========================================================= */
 
 async function trendingMovies() {
-  let movies = await tmdb(
-    "/trending/movie/week",
-    { page: 1 }
-  );
+  const target = 30;
+  const maxPages = 10;
 
-  movies =
-    withoutAnime(
-      movies.results || []
+  let validMovies = [];
+  let page = 1;
+
+  while (
+    validMovies.length < target &&
+    page <= maxPages
+  ) {
+    const data = await tmdb(
+      "/trending/movie/week",
+      { page },
+      900
     );
 
-  // Remove all animation
-  movies =
-    movies.filter(
-      x =>
-        !(x.genre_ids || []).includes(16)
+    let movies =
+      data.results || [];
+
+    if (!movies.length) {
+      break;
+    }
+
+    // Remove anime
+    movies =
+      withoutAnime(movies);
+
+    // Remove all animation
+    movies =
+      movies.filter(
+        x =>
+          !(x.genre_ids || []).includes(16)
+      );
+
+    // Apply existing unwanted-genre filter
+    movies =
+      withoutExcludedGenres(
+        movies,
+        "movie"
+      );
+
+    // Add media type
+    movies =
+      movies.map(x => ({
+        ...x,
+        media_type: "movie"
+      }));
+
+    /*
+     * Remove duplicates against movies
+     * already collected.
+     */
+    const existingIds =
+      new Set(
+        validMovies.map(x => x.id)
+      );
+
+    movies =
+      movies.filter(
+        x => !existingIds.has(x.id)
+      );
+
+    /*
+     * Check digital releases.
+     *
+     * This is deliberately done after
+     * the cheaper filters above so we
+     * don't waste release-date requests
+     * on animation/unwanted titles.
+     */
+    const digitalMovies =
+      await digitalOnly(movies);
+
+    validMovies.push(
+      ...digitalMovies
     );
 
-  // Apply the existing unwanted-genre filter
-  movies =
-    withoutExcludedGenres(
-      movies,
-      "movie"
-    );
-
-  // Require a digital release
-  movies =
-    await digitalOnly(movies);
-
-  // Add media type for metadata
-  movies =
-    movies.map(x => ({
-      ...x,
-      media_type: "movie"
-    }));
+    page++;
+  }
 
   return sortPopularity(
-    dedupe(movies)
+    dedupe(validMovies)
   )
     .map(movieMeta)
-    .slice(0, 100);
+    .slice(0, target);
 }
 
 /* =========================================================
