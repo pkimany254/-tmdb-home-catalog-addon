@@ -6,7 +6,7 @@ This addon provides curated home-page catalogs for WuPlay. It provides catalog d
 
 ## Current Version
 
-**3.2.0**
+**1.3.0**
 
 ## Catalogs
 
