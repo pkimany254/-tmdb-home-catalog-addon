@@ -779,18 +779,21 @@ async function trendingKenya() {
 
 async function airingToday() {
 
-  const data =
-    await tmdb(
+  let shows =
+    await tmdbPages(
       "/tv/airing_today",
-      { page: 1 }
+      {},
+      10
     );
 
-  const shows =
+  shows =
     withoutAnime(
-      data.results || []
+      shows
     ).filter(
       x =>
-        (x.popularity || 0) >= 10
+        (x.popularity || 0) >= 10 &&
+        !(x.genre_ids || []).includes(16) &&
+        !(x.genre_ids || []).includes(0)
     );
 
   return shows
