@@ -6,7 +6,7 @@ The addon provides curated homepage catalogs combining movies and series, with s
 
 ## Current Version
 
-**v1.3.0**
+**v1.4.0**
 
 ---
 
