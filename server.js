@@ -7,7 +7,7 @@ const KEY = process.env.TMDB_API_KEY;
 
 const manifest = {
   id: "org.pkimany254.tmdb-home-catalogs",
-  version: "1.4.0",
+  version: "1.4.1",
   name: "TMDB WuPlay Home Catalogs",
   description: "Catalog-only WuPlay/Stremio addon powered by TMDB.",
   resources: ["catalog"],
@@ -166,10 +166,45 @@ const builder = new addonBuilder(manifest);
 const cache = new Map();
 
 /* =========================================================
+   TMDB REQUEST CONCURRENCY LIMIT
+========================================================= */
+
+const TMDB_MAX_CONCURRENT = 10;
+
+let tmdbActiveRequests = 0;
+const tmdbQueue = [];
+
+function acquireTmdbSlot() {
+  return new Promise(resolve => {
+
+    if (tmdbActiveRequests < TMDB_MAX_CONCURRENT) {
+      tmdbActiveRequests++;
+      resolve();
+      return;
+    }
+
+    tmdbQueue.push(resolve);
+  });
+}
+
+function releaseTmdbSlot() {
+  tmdbActiveRequests--;
+
+  if (tmdbQueue.length > 0) {
+    const next = tmdbQueue.shift();
+
+    tmdbActiveRequests++;
+
+    next();
+  }
+}
+
+/* =========================================================
    TMDB REQUEST
 ========================================================= */
 
 async function tmdb(path, params = {}, ttl = 900) {
+
   if (!KEY) {
     throw new Error("TMDB_API_KEY is not configured");
   }
@@ -180,33 +215,100 @@ async function tmdb(path, params = {}, ttl = 900) {
   url.searchParams.set("language", "en-US");
 
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null) {
-      url.searchParams.set(key, value);
+
+    if (
+      value !== undefined &&
+      value !== null
+    ) {
+      url.searchParams.set(
+        key,
+        value
+      );
     }
   }
 
   const cacheKey = url.toString();
 
+  /* -------------------------------------------------------
+     CHECK CACHE BEFORE QUEUING
+  ------------------------------------------------------- */
+
   const cached = cache.get(cacheKey);
 
-  if (cached && cached.expires > Date.now()) {
+  if (
+    cached &&
+    cached.expires > Date.now()
+  ) {
     return cached.data;
   }
 
-  const response = await fetch(url);
+  /* -------------------------------------------------------
+     WAIT FOR A TMDB REQUEST SLOT
+  ------------------------------------------------------- */
 
-  if (!response.ok) {
-    throw new Error(`TMDB ${response.status}`);
+  await acquireTmdbSlot();
+
+  try {
+
+    /* -----------------------------------------------------
+       CHECK CACHE AGAIN
+
+       Another request may have populated the cache while
+       this request was waiting in the queue.
+    ----------------------------------------------------- */
+
+    const cachedAgain =
+      cache.get(cacheKey);
+
+    if (
+      cachedAgain &&
+      cachedAgain.expires > Date.now()
+    ) {
+      return cachedAgain.data;
+    }
+
+    /* -----------------------------------------------------
+       TMDB REQUEST
+    ----------------------------------------------------- */
+
+    const response =
+      await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `TMDB ${response.status}`
+      );
+    }
+
+    const data =
+      await response.json();
+
+    /* -----------------------------------------------------
+       SAVE TO CACHE
+    ----------------------------------------------------- */
+
+    cache.set(
+      cacheKey,
+      {
+        data,
+        expires:
+          Date.now() +
+          ttl * 1000
+      }
+    );
+
+    return data;
+
+  } finally {
+
+    /* -----------------------------------------------------
+       ALWAYS RELEASE THE SLOT
+
+       Even if TMDB returns an error.
+    ----------------------------------------------------- */
+
+    releaseTmdbSlot();
   }
-
-  const data = await response.json();
-
-  cache.set(cacheKey, {
-    data,
-    expires: Date.now() + ttl * 1000
-  });
-
-  return data;
 }
 
 /* =========================================================
@@ -2168,5 +2270,5 @@ serveHTTP(
 );
 
 console.log(
-  `TMDB WuPlay Home Catalogs v1.4.0 listening on port ${PORT}`
+  `TMDB WuPlay Home Catalogs v1.4.1 listening on port ${PORT}`
 );
