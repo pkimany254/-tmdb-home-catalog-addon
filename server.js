@@ -1570,130 +1570,111 @@ async function popularMovies() {
 }
 
 /* =========================================================
-   IN THEATRES — POPULAR MOVIES AWAITING DIGITAL RELEASE
+   IN THEATRES — RECENT THEATRICAL MOVIES AWAITING DIGITAL RELEASE
 ========================================================= */
 
 async function inTheatres() {
 
-  const target = 100;
-  const maxPages = 10;
+  const startDate =
+    day(-90);
 
-  let theatreMovies = [];
-  let page = 1;
+  const endDate =
+    day();
 
-  while (
-    theatreMovies.length < target &&
-    page <= maxPages
-  ) {
+  let movies =
+    await tmdbPages(
+      "/movie/now_playing",
+      {},
+      3
+    );
 
-    let movies =
-      await tmdb(
-        "/movie/now_playing",
-        { page },
-        900
-      );
+  movies =
+    movies.filter(
+      x => {
+        const releaseDate =
+          x.release_date || "";
 
-    movies =
-      movies.results || [];
+        return (
+          releaseDate >= startDate &&
+          releaseDate <= endDate
+        );
+      }
+    );
 
-    if (!movies.length) {
-      break;
-    }
+  movies =
+    withoutAnime(movies);
 
-    movies =
-      withoutAnime(movies);
+  movies =
+    movies.filter(
+      x =>
+        !(x.genre_ids || [])
+          .includes(16)
+    );
 
-    movies =
-      movies.filter(
-        x =>
-          !(x.genre_ids || [])
-            .includes(16)
-      );
+  movies =
+    withoutExcludedGenres(
+      movies,
+      "movie"
+    );
 
-    movies =
-      withoutExcludedGenres(
-        movies,
-        "movie"
-      );
+  movies =
+    movies.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
 
-    movies =
-      movies.map(x => ({
-        ...x,
-        media_type: "movie"
-      }));
+  const withoutDigitalRelease = [];
 
-    const existingIds =
-      new Set(
-        theatreMovies.map(
-          x => x.id
-        )
-      );
+  let index = 0;
 
-    movies =
-      movies.filter(
-        x =>
-          !existingIds.has(x.id)
-      );
+  async function worker() {
 
-    const withoutDigitalRelease = [];
+    while (
+      index < movies.length
+    ) {
 
-    let index = 0;
+      const item =
+        movies[index++];
 
-    async function worker() {
+      try {
 
-      while (
-        index < movies.length
-      ) {
-
-        const item =
-          movies[index++];
-
-        try {
-
-          if (
-            !(await hasDigitalRelease(item.id))
-          ) {
-            withoutDigitalRelease.push(item);
-          }
-
-        } catch (error) {
-
-          console.warn(
-            "Theatre digital release check failed:",
-            item.id,
-            error.message
-          );
+        if (
+          !(await hasDigitalRelease(item.id))
+        ) {
+          withoutDigitalRelease.push(item);
         }
+
+      } catch (error) {
+
+        console.warn(
+          "Theatre digital release check failed:",
+          item.id,
+          error.message
+        );
       }
     }
-
-    const workerCount =
-      Math.min(
-        8,
-        movies.length
-      );
-
-    await Promise.all(
-      Array.from(
-        {
-          length: workerCount
-        },
-        worker
-      )
-    );
-
-    theatreMovies.push(
-      ...withoutDigitalRelease
-    );
-
-    page++;
   }
 
+  const workerCount =
+    Math.min(
+      8,
+      movies.length
+    );
+
+  await Promise.all(
+    Array.from(
+      {
+        length: workerCount
+      },
+      worker
+    )
+  );
+
   return sortPopularity(
-    dedupe(theatreMovies)
+    dedupe(withoutDigitalRelease)
   )
     .map(movieMeta)
-    .slice(0, target);
+    .slice(0, 100);
 }
 
 async function topRatedMovies() {
@@ -1775,11 +1756,30 @@ async function mostRatedMovies() {
 
 async function nowPlaying() {
 
+  const startDate =
+    day(-7);
+
+  const endDate =
+    day();
+
   let movies =
     await tmdbPages(
       "/movie/now_playing",
       {},
       3
+    );
+
+  movies =
+    movies.filter(
+      x => {
+        const releaseDate =
+          x.release_date || "";
+
+        return (
+          releaseDate >= startDate &&
+          releaseDate <= endDate
+        );
+      }
     );
 
   movies =
@@ -1804,7 +1804,14 @@ async function nowPlaying() {
       media_type: "movie"
     }));
 
-  return dedupe(movies)
+  movies =
+    await digitalOnly(
+      movies
+    );
+
+  return sortPopularity(
+    dedupe(movies)
+  )
     .map(movieMeta)
     .slice(0, 100);
 }
