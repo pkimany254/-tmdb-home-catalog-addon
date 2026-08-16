@@ -833,7 +833,7 @@ async function newEpisodes() {
 
   const shows =
     withoutAnime(
-      data.results || []
+      data || []
     ).filter(
       x =>
         (x.popularity || 0) >= 10 &&
