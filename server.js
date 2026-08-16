@@ -7,7 +7,7 @@ const KEY = process.env.TMDB_API_KEY;
 
 const manifest = {
   id: "org.pkimany254.tmdb-home-catalogs",
-  version: "1.4.2",
+  version: "1.0.3",
   name: "TMDB WuPlay Home Catalogs",
   description: "Catalog-only WuPlay/Stremio addon powered by TMDB.",
   resources: ["catalog"],
@@ -81,6 +81,12 @@ const manifest = {
       name: "Trending Series",
       extra: [{ name: "skip", isRequired: false }]
     },
+    {
+  id: "top-picks",
+  type: "movie",
+  name: "Top Picks",
+  extra: [{ name: "skip", isRequired: false }]
+},
     {
       id: "popular-movies",
       type: "movie",
@@ -1485,7 +1491,7 @@ async function trendingSeries() {
 }
 
 /* =========================================================
-   DISCOVERY — MOVIES
+   13. POPULA MOVIES
 ========================================================= */
 
 async function popularMovies() {
@@ -1570,7 +1576,7 @@ async function popularMovies() {
 }
 
 /* =========================================================
-   IN THEATRES — RECENT THEATRICAL MOVIES AWAITING DIGITAL RELEASE
+   14. IN THEATRES — RECENT THEATRICAL MOVIES AWAITING DIGITAL RELEASE
 ========================================================= */
 
 async function inTheatres() {
@@ -1949,7 +1955,7 @@ async function newlyReleasedMovies() {
 }
 
 /* =========================================================
-   DISCOVERY — SERIES
+   15. POPULAR SERIES
 ========================================================= */
 
 async function popularSeries() {
@@ -2236,6 +2242,163 @@ async function upcomingSeries() {
 }
 
 /* =========================================================
+   16. TOP PICKS
+   MIXED MOVIES + SERIES
+========================================================= */
+
+async function topPicks() {
+
+  const [
+    movies,
+    series
+  ] = await Promise.all([
+
+    tmdbPages(
+      "/discover/movie",
+      {
+        sort_by:
+          "popularity.desc",
+
+        "vote_average.gte":
+          7,
+
+        "vote_count.gte":
+          500,
+
+        include_adult:
+          "false"
+      },
+      5
+    ),
+
+    tmdbPages(
+      "/discover/tv",
+      {
+        sort_by:
+          "popularity.desc",
+
+        "vote_average.gte":
+          7,
+
+        "vote_count.gte":
+          500,
+
+        include_adult:
+          "false"
+      },
+      5
+    )
+  ]);
+
+  /* -------------------------------------------------------
+     MOVIES
+     ------------------------------------------------------- */
+
+  let movieItems =
+    withoutAnime(movies);
+
+  movieItems =
+    movieItems.filter(
+      x =>
+        !(x.genre_ids || [])
+          .includes(16)
+    );
+
+  movieItems =
+    withoutExcludedGenres(
+      movieItems,
+      "movie"
+    );
+
+  movieItems =
+    movieItems.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  /*
+   * Movies must already have a digital release.
+   */
+
+  movieItems =
+    await digitalOnly(
+      movieItems
+    );
+
+  /* -------------------------------------------------------
+     SERIES
+     ------------------------------------------------------- */
+
+  let seriesItems =
+    withoutAnime(series);
+
+  seriesItems =
+    seriesItems.filter(
+      x =>
+        !(x.genre_ids || [])
+          .includes(16)
+    );
+
+  seriesItems =
+    withoutExcludedGenres(
+      seriesItems,
+      "series"
+    );
+
+  seriesItems =
+    seriesItems.map(x => ({
+      ...x,
+      media_type: "tv"
+    }));
+
+  /* -------------------------------------------------------
+     COMBINE
+     ------------------------------------------------------- */
+
+  let combined = [
+    ...movieItems,
+    ...seriesItems
+  ];
+
+  /*
+   * Give highly rated titles a strong advantage while
+   * still allowing popularity and vote count to matter.
+   */
+
+  combined =
+    combined.sort(
+      (a, b) => {
+
+        const scoreA =
+          (a.vote_average || 0) * 10 +
+          Math.log10(
+            (a.vote_count || 0) + 1
+          ) * 8 +
+          Math.min(
+            a.popularity || 0,
+            100
+          ) * 0.15;
+
+        const scoreB =
+          (b.vote_average || 0) * 10 +
+          Math.log10(
+            (b.vote_count || 0) + 1
+          ) * 8 +
+          Math.min(
+            b.popularity || 0,
+            100
+          ) * 0.15;
+
+        return scoreB - scoreA;
+      }
+    );
+
+  return mixedMeta(
+    dedupe(combined)
+  ).slice(0, 20);
+}
+
+/* =========================================================
    CATALOG HANDLER
 ========================================================= */
 
@@ -2262,6 +2425,11 @@ builder.defineCatalogHandler(
           metas =
             await calendarVideos();
           break;
+
+          case "top-picks":
+  metas =
+    await topPicks();
+  break;
 
         case "top10-week":
           metas =
@@ -2447,5 +2615,5 @@ serveHTTP(
 );
 
 console.log(
-  `TMDB WuPlay Home Catalogs v1.4.2 listening on port ${PORT}`
+  `TMDB WuPlay Home Catalogs v1.0.3 listening on port ${PORT}`
 );
