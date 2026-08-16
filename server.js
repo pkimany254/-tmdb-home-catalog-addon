@@ -813,31 +813,32 @@ async function airingToday() {
 async function newEpisodes() {
 
   const data =
-    await tmdb(
-      "/discover/tv",
-      {
-        "air_date.gte":
-          day(-7),
+  await tmdbPages(
+    "/discover/tv",
+    {
+      "air_date.gte":
+        day(-14),
 
-        "air_date.lte":
-          day(),
+      "air_date.lte":
+        day(),
 
-        sort_by:
-          "popularity.desc",
+      sort_by:
+        "popularity.desc",
 
-        include_adult:
-          "false",
-
-        page: 1
-      }
-    );
+      include_adult:
+        "false"
+    },
+    5
+  );
 
   const shows =
     withoutAnime(
       data.results || []
     ).filter(
       x =>
-        (x.popularity || 0) >= 10
+        (x.popularity || 0) >= 10 &&
+         x.original_language === "en" &&
+        !(x.genre_ids || []).includes(16)
     );
 
   return shows
