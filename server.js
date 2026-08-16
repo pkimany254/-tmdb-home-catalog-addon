@@ -792,8 +792,8 @@ async function airingToday() {
     ).filter(
       x =>
         (x.popularity || 0) >= 10 &&
-        !(x.genre_ids || []).includes(16) &&
-        !(x.genre_ids || []).includes(0)
+         x.original_language === "en" &&
+        !(x.genre_ids || []).includes(16)
     );
 
   return shows
