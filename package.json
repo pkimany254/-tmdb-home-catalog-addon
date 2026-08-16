@@ -1,6 +1,6 @@
 {
   "name": "tmdb-home-catalog-addon",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "description": "Catalog-only Stremio addon for a TMDB-based home menu.",
   "main": "server.js",
