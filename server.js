@@ -1102,49 +1102,47 @@ async function top10SeriesWeek() {
 async function newReleases() {
 
   const [
-    movies,
-    tv
-  ] = await Promise.all([
+  movies,
+  tv
+] = await Promise.all([
 
-    tmdb(
-      "/discover/movie",
-      {
-        "primary_release_date.gte":
-          day(-14),
+  tmdbPages(
+    "/discover/movie",
+    {
+      "primary_release_date.gte":
+        day(-14),
 
-        "primary_release_date.lte":
-          day(),
+      "primary_release_date.lte":
+        day(),
 
-        sort_by:
-          "popularity.desc",
+      sort_by:
+        "popularity.desc",
 
-        include_adult:
-          "false",
+      include_adult:
+        "false"
+    },
+    10
+  ),
 
-        page: 1
-      }
-    ),
+  tmdbPages(
+    "/discover/tv",
+    {
+      "first_air_date.gte":
+        day(-14),
 
-    tmdb(
-      "/discover/tv",
-      {
-        "first_air_date.gte":
-          day(-14),
+      "first_air_date.lte":
+        day(),
 
-        "first_air_date.lte":
-          day(),
+      sort_by:
+        "popularity.desc",
 
-        sort_by:
-          "popularity.desc",
-
-        include_adult:
-          "false",
-
-        page: 1
-      }
-    )
-  ]);
-
+      include_adult:
+        "false"
+    },
+    10
+  )
+]);
+  
   const movieItems =
     withoutAnime(
       (movies.results || [])
