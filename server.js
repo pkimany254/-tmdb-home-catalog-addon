@@ -1102,54 +1102,54 @@ async function top10SeriesWeek() {
 async function newReleases() {
 
   const [
-  movies,
-  tv
-] = await Promise.all([
+    movies,
+    tv
+  ] = await Promise.all([
 
-  tmdbPages(
-    "/discover/movie",
-    {
-      "primary_release_date.gte":
-        day(-14),
+    tmdbPages(
+      "/discover/movie",
+      {
+        "primary_release_date.gte":
+          day(-14),
 
-      "primary_release_date.lte":
-        day(),
+        "primary_release_date.lte":
+          day(),
 
-      sort_by:
-        "popularity.desc",
+        sort_by:
+          "popularity.desc",
 
-      include_adult:
-        "false"
-    },
-    10
-  ),
+        include_adult:
+          "false"
+      },
+      10
+    ),
 
-  tmdbPages(
-    "/discover/tv",
-    {
-      "first_air_date.gte":
-        day(-14),
+    tmdbPages(
+      "/discover/tv",
+      {
+        "first_air_date.gte":
+          day(-14),
 
-      "first_air_date.lte":
-        day(),
+        "first_air_date.lte":
+          day(),
 
-      sort_by:
-        "popularity.desc",
+        sort_by:
+          "popularity.desc",
 
-      include_adult:
-        "false"
-    },
-    10
-  )
-]);
-  
+        include_adult:
+          "false"
+      },
+      10
+    )
+  ]);
+
   const movieItems =
     withoutAnime(
-      (movies.results || [])
+      movies
         .filter(
           x =>
             (x.popularity || 0) >= 10 &&
-         x.original_language === "en"
+            x.original_language === "en"
         )
         .map(x => ({
           ...x,
@@ -1164,11 +1164,11 @@ async function newReleases() {
 
   const seriesItems =
     withoutAnime(
-      (tv.results || [])
+      tv
         .filter(
           x =>
             (x.popularity || 0) >= 10 &&
-         x.original_language === "en"
+            x.original_language === "en"
         )
         .map(x => ({
           ...x,
