@@ -1494,7 +1494,7 @@ async function trendingSeries() {
 }
 
 /* =========================================================
-   13. POPULA MOVIES
+   13. POPULAR MOVIES
 ========================================================= */
 
 async function popularMovies() {
