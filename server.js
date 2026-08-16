@@ -2251,6 +2251,12 @@ async function upcomingSeries() {
 
 async function topPicks() {
 
+  const today =
+    day();
+
+  const oneYearAgo =
+    day(-365);
+
   const [
     movies,
     series
@@ -2267,6 +2273,12 @@ async function topPicks() {
 
         "vote_count.gte":
           500,
+
+        "primary_release_date.gte":
+          oneYearAgo,
+
+        "primary_release_date.lte":
+          today,
 
         include_adult:
           "false"
@@ -2285,6 +2297,12 @@ async function topPicks() {
 
         "vote_count.gte":
           500,
+
+        "first_air_date.gte":
+          oneYearAgo,
+
+        "first_air_date.lte":
+          today,
 
         include_adult:
           "false"
