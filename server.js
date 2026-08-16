@@ -7,7 +7,7 @@ const KEY = process.env.TMDB_API_KEY;
 
 const manifest = {
   id: "org.pkimany254.tmdb-home-catalogs",
-  version: "1.4.1",
+  version: "1.4.2",
   name: "TMDB WuPlay Home Catalogs",
   description: "Catalog-only WuPlay/Stremio addon powered by TMDB.",
   resources: ["catalog"],
@@ -15,12 +15,6 @@ const manifest = {
   idPrefixes: ["tt", "tmdb:"],
 
   catalogs: [
-    {
-      id: "trending-kenya",
-      type: "movie",
-      name: "Trending in Kenya",
-      extra: [{ name: "skip", isRequired: false }]
-    },
     {
       id: "airing-today",
       type: "series",
@@ -91,6 +85,12 @@ const manifest = {
       id: "popular-movies",
       type: "movie",
       name: "Popular Movies",
+      extra: [{ name: "skip", isRequired: false }]
+    },
+    {
+      id: "in-theatres",
+      type: "movie",
+      name: "In Theatres",
       extra: [{ name: "skip", isRequired: false }]
     },
     {
@@ -1490,40 +1490,210 @@ async function trendingSeries() {
 
 async function popularMovies() {
 
-  let movies =
-    await tmdbPages(
-      "/movie/popular",
-      {},
-      10
+  const target = 100;
+  const maxPages = 10;
+
+  let validMovies = [];
+  let page = 1;
+
+  while (
+    validMovies.length < target &&
+    page <= maxPages
+  ) {
+
+    let movies =
+      await tmdb(
+        "/movie/popular",
+        { page },
+        900
+      );
+
+    movies =
+      movies.results || [];
+
+    if (!movies.length) {
+      break;
+    }
+
+    movies =
+      withoutAnime(movies);
+
+    movies =
+      movies.filter(
+        x =>
+          !(x.genre_ids || [])
+            .includes(16)
+      );
+
+    movies =
+      withoutExcludedGenres(
+        movies,
+        "movie"
+      );
+
+    movies =
+      movies.map(x => ({
+        ...x,
+        media_type: "movie"
+      }));
+
+    const existingIds =
+      new Set(
+        validMovies.map(
+          x => x.id
+        )
+      );
+
+    movies =
+      movies.filter(
+        x =>
+          !existingIds.has(x.id)
+      );
+
+    const digitalMovies =
+      await digitalOnly(
+        movies
+      );
+
+    validMovies.push(
+      ...digitalMovies
     );
 
-  movies =
-    withoutAnime(movies);
-
-  movies =
-    movies.filter(
-      x =>
-        !(x.genre_ids || [])
-          .includes(16)
-    );
-
-  movies =
-    withoutExcludedGenres(
-      movies,
-      "movie"
-    );
-
-  movies =
-    movies.map(x => ({
-      ...x,
-      media_type: "movie"
-    }));
+    page++;
+  }
 
   return sortPopularity(
-    dedupe(movies)
+    dedupe(validMovies)
   )
     .map(movieMeta)
-    .slice(0, 100);
+    .slice(0, target);
+}
+
+/* =========================================================
+   IN THEATRES — POPULAR MOVIES AWAITING DIGITAL RELEASE
+========================================================= */
+
+async function inTheatres() {
+
+  const target = 100;
+  const maxPages = 10;
+
+  let theatreMovies = [];
+  let page = 1;
+
+  while (
+    theatreMovies.length < target &&
+    page <= maxPages
+  ) {
+
+    let movies =
+      await tmdb(
+        "/movie/now_playing",
+        { page },
+        900
+      );
+
+    movies =
+      movies.results || [];
+
+    if (!movies.length) {
+      break;
+    }
+
+    movies =
+      withoutAnime(movies);
+
+    movies =
+      movies.filter(
+        x =>
+          !(x.genre_ids || [])
+            .includes(16)
+      );
+
+    movies =
+      withoutExcludedGenres(
+        movies,
+        "movie"
+      );
+
+    movies =
+      movies.map(x => ({
+        ...x,
+        media_type: "movie"
+      }));
+
+    const existingIds =
+      new Set(
+        theatreMovies.map(
+          x => x.id
+        )
+      );
+
+    movies =
+      movies.filter(
+        x =>
+          !existingIds.has(x.id)
+      );
+
+    const withoutDigitalRelease = [];
+
+    let index = 0;
+
+    async function worker() {
+
+      while (
+        index < movies.length
+      ) {
+
+        const item =
+          movies[index++];
+
+        try {
+
+          if (
+            !(await hasDigitalRelease(item.id))
+          ) {
+            withoutDigitalRelease.push(item);
+          }
+
+        } catch (error) {
+
+          console.warn(
+            "Theatre digital release check failed:",
+            item.id,
+            error.message
+          );
+        }
+      }
+    }
+
+    const workerCount =
+      Math.min(
+        8,
+        movies.length
+      );
+
+    await Promise.all(
+      Array.from(
+        {
+          length: workerCount
+        },
+        worker
+      )
+    );
+
+    theatreMovies.push(
+      ...withoutDigitalRelease
+    );
+
+    page++;
+  }
+
+  return sortPopularity(
+    dedupe(theatreMovies)
+  )
+    .map(movieMeta)
+    .slice(0, target);
 }
 
 async function topRatedMovies() {
@@ -2071,11 +2241,6 @@ builder.defineCatalogHandler(
 
       switch (args.id) {
 
-        case "trending-kenya":
-          metas =
-            await trendingKenya();
-          break;
-
         case "airing-today":
           metas =
             await airingToday();
@@ -2134,6 +2299,11 @@ builder.defineCatalogHandler(
         case "popular-movies":
           metas =
             await popularMovies();
+          break;
+
+        case "in-theatres":
+          metas =
+            await inTheatres();
           break;
 
         case "top-rated-movies":
@@ -2270,5 +2440,5 @@ serveHTTP(
 );
 
 console.log(
-  `TMDB WuPlay Home Catalogs v1.4.1 listening on port ${PORT}`
+  `TMDB WuPlay Home Catalogs v1.4.2 listening on port ${PORT}`
 );
