@@ -17,7 +17,6 @@ const manifest = {
   catalogs: [
     { id: "top-picks", type: "movie", name: "Top Picks", extra: [{ name: "skip", isRequired: false }] },
     { id: "trending-now", type: "movie", name: "Trending Now", extra: [{ name: "skip", isRequired: false }] },
-    { id: "airing-today", type: "series", name: "Airing Today", extra: [{ name: "skip", isRequired: false }] },
     { id: "now-playing", type: "movie", name: "Now Playing", extra: [{ name: "skip", isRequired: false }] },
     { id: "new-releases", type: "movie", name: "New Releases", extra: [{ name: "skip", isRequired: false }] },
     { id: "in-theatres", type: "movie", name: "In Theatres", extra: [{ name: "skip", isRequired: false }] },
@@ -1605,12 +1604,12 @@ async function mostRatedMovies() {
 }
 
 /* =========================================================
-   NOW PLAYING
+   NOW PLAYING MOVIES
 ========================================================= */
 
-async function nowPlaying() {
+async function nowPlayingMovies() {
 
-  const releaseWindowDays = 7;
+  const releaseWindowDays = 2;
   const pagesToScan = 3;
   const resultLimit = 100;
 
@@ -1672,6 +1671,27 @@ async function nowPlaying() {
   )
     .map(movieMeta)
     .slice(0, resultLimit);
+}
+
+/* =========================================================
+   NOW PLAYING
+   MIXED MOVIES + AIRING TODAY SERIES
+========================================================= */
+
+async function nowPlaying() {
+
+  const [
+    movies,
+    series
+  ] = await Promise.all([
+    nowPlayingMovies(),
+    airingToday()
+  ]);
+
+  return interleaveCatalogRows(
+    movies,
+    series
+  );
 }
 
 async function upcomingMovies() {
@@ -2310,11 +2330,6 @@ builder.defineCatalogHandler(
         case "trending-now":
           metas =
             await trendingNow();
-          break;
-
-        case "airing-today":
-          metas =
-            await airingToday();
           break;
 
         case "new-releases":
