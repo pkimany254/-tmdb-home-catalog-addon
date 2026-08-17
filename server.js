@@ -502,7 +502,8 @@ const EXCLUDED_TV_GENRES =
     10763,  // News
     10764,  // Reality
     10766,  // Soap
-    10767   // Talk
+    10767,   // Talk
+    10762    // Kids
   ]);
 
 const EXCLUDED_MOVIE_GENRES =
