@@ -727,7 +727,8 @@ async function airingToday() {
       x =>
         (x.popularity || 0) >= 10 &&
          x.original_language === "en" &&
-        !(x.genre_ids || []).includes(16)
+        !(x.genre_ids || []).includes(16) &&
+        !(x.genre_ids || []).includes(35)
     );
 
   return shows
@@ -772,7 +773,8 @@ async function newEpisodes() {
       x =>
         (x.popularity || 0) >= 10 &&
          x.original_language === "en" &&
-        !(x.genre_ids || []).includes(16)
+        !(x.genre_ids || []).includes(16) &&
+        !(x.genre_ids || []).includes(35)
     );
 
   return shows
