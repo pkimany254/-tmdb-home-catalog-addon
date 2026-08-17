@@ -1434,8 +1434,8 @@ async function trendingSeries() {
 
 async function popularMovies() {
 
-  const target = 200;
-  const maxPages = 20;
+  const target = 250;
+  const maxPages = 50;
 
   let validMovies = [];
   let page = 1;
@@ -1902,7 +1902,7 @@ async function popularSeries() {
     await tmdbPages(
       "/tv/popular",
       {},
-      20
+      50
     );
 
   series =
@@ -1931,7 +1931,7 @@ async function popularSeries() {
     dedupe(series)
   )
     .map(seriesMeta)
-    .slice(0, 200);
+    .slice(0, 250);
 }
 
 async function topRatedSeries() {
