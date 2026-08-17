@@ -930,7 +930,7 @@ async function newReleases() {
       "/discover/movie",
       {
         "primary_release_date.gte":
-          day(-14),
+          day(-30),
 
         "primary_release_date.lte":
           day(),
@@ -941,14 +941,14 @@ async function newReleases() {
         include_adult:
           "false"
       },
-      10
+      20
     ),
 
     tmdbPages(
       "/discover/tv",
       {
         "first_air_date.gte":
-          day(-14),
+          day(-30),
 
         "first_air_date.lte":
           day(),
@@ -959,7 +959,7 @@ async function newReleases() {
         include_adult:
           "false"
       },
-      10
+      20
     )
   ]);
 
@@ -1004,7 +1004,7 @@ async function newReleases() {
 
   return mixedMeta(
     dedupe(combined)
-  ).slice(0, 100);
+  ).slice(0, 200);
 }
 
 /* =========================================================
@@ -1604,10 +1604,18 @@ async function mostRatedMovies() {
     .slice(0, 100);
 }
 
+/* =========================================================
+   NOW PLAYING
+========================================================= */
+
 async function nowPlaying() {
 
+  const releaseWindowDays = 7;
+  const pagesToScan = 3;
+  const resultLimit = 100;
+
   const startDate =
-    day(-7);
+    day(-releaseWindowDays);
 
   const endDate =
     day();
@@ -1616,7 +1624,7 @@ async function nowPlaying() {
     await tmdbPages(
       "/movie/now_playing",
       {},
-      3
+      pagesToScan
     );
 
   movies =
@@ -1663,7 +1671,7 @@ async function nowPlaying() {
     dedupe(movies)
   )
     .map(movieMeta)
-    .slice(0, 100);
+    .slice(0, resultLimit);
 }
 
 async function upcomingMovies() {
