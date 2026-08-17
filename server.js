@@ -7,7 +7,7 @@ const KEY = process.env.TMDB_API_KEY;
 
 const manifest = {
   id: "org.pkimany254.tmdb-home-catalogs",
-  version: "1.0.3",
+  version: "1.0.0",
   name: "TMDB WuPlay Home Catalogs",
   description: "Catalog-only WuPlay/Stremio addon powered by TMDB.",
   resources: ["catalog"],
@@ -15,156 +15,13 @@ const manifest = {
   idPrefixes: ["tt", "tmdb:"],
 
   catalogs: [
-    {
-      id: "airing-today",
-      type: "series",
-      name: "Airing Today",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "new-episodes",
-      type: "series",
-      name: "New Episodes",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "calendar-videos",
-      type: "movie",
-      name: "Calendar Videos",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "top10-week",
-      type: "movie",
-      name: "Top 10 This Week",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "top10-movies-week",
-      type: "movie",
-      name: "Top 10 Movies This Week",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "top10-series-week",
-      type: "series",
-      name: "Top 10 Series This Week",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "new-releases",
-      type: "movie",
-      name: "New Releases",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "anime-series",
-      type: "series",
-      name: "Trending Anime Series",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "trending-animation",
-      type: "movie",
-      name: "Trending Animation",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "trending-movies",
-      type: "movie",
-      name: "Trending Movies",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "trending-series",
-      type: "series",
-      name: "Trending Series",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-  id: "top-picks",
-  type: "movie",
-  name: "Top Picks",
-  extra: [{ name: "skip", isRequired: false }]
-},
-    {
-      id: "popular-movies",
-      type: "movie",
-      name: "Popular Movies",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "in-theatres",
-      type: "movie",
-      name: "In Theatres",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "top-rated-movies",
-      type: "movie",
-      name: "Top Rated Movies",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "most-rated-movies",
-      type: "movie",
-      name: "Most Rated Movies",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "now-playing",
-      type: "movie",
-      name: "Now Playing",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "upcoming-movies",
-      type: "movie",
-      name: "Upcoming Movies",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "newly-released-movies",
-      type: "movie",
-      name: "Newly Released Movies",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "popular-series",
-      type: "series",
-      name: "Popular Series",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "top-rated-series",
-      type: "series",
-      name: "Top Rated Series",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "most-rated-series",
-      type: "series",
-      name: "Most Rated Series",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "on-the-air",
-      type: "series",
-      name: "On The Air",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "upcoming-series",
-      type: "series",
-      name: "Upcoming Series",
-      extra: [{ name: "skip", isRequired: false }]
-    },
-    {
-      id: "newly-released-series",
-      type: "series",
-      name: "Newly Released Series",
-      extra: [{ name: "skip", isRequired: false }]
-    }
+    { id: "top-picks", type: "movie", name: "Top Picks", extra: [{ name: "skip", isRequired: false }] },
+    { id: "trending-now", type: "movie", name: "Trending Now", extra: [{ name: "skip", isRequired: false }] },
+    { id: "airing-today", type: "series", name: "Airing Today", extra: [{ name: "skip", isRequired: false }] },
+    { id: "now-playing", type: "movie", name: "Now Playing", extra: [{ name: "skip", isRequired: false }] },
+    { id: "new-releases", type: "movie", name: "New Releases", extra: [{ name: "skip", isRequired: false }] },
+    { id: "in-theatres", type: "movie", name: "In Theatres", extra: [{ name: "skip", isRequired: false }] },
+    { id: "upcoming", type: "movie", name: "Upcoming", extra: [{ name: "skip", isRequired: false }] }
   ]
 };
 
@@ -551,6 +408,31 @@ function mixedMeta(items) {
         ? movieMeta(x)
         : seriesMeta(x)
     );
+}
+
+function interleaveCatalogRows(
+  movies,
+  series
+) {
+
+  const merged = [];
+  const length = Math.max(
+    movies.length,
+    series.length
+  );
+
+  for (let index = 0; index < length; index++) {
+
+    if (movies[index]) {
+      merged.push(movies[index]);
+    }
+
+    if (series[index]) {
+      merged.push(series[index]);
+    }
+  }
+
+  return merged;
 }
 
 function dedupe(items) {
@@ -1432,6 +1314,27 @@ async function trendingSeries() {
 }
 
 /* =========================================================
+   TRENDING NOW
+   MIXED TRENDING MOVIES + SERIES
+========================================================= */
+
+async function trendingNow() {
+
+  const [
+    movies,
+    series
+  ] = await Promise.all([
+    trendingMovies(),
+    trendingSeries()
+  ]);
+
+  return interleaveCatalogRows(
+    movies,
+    series
+  );
+}
+
+/* =========================================================
    13. POPULAR MOVIES
 ========================================================= */
 
@@ -2183,6 +2086,27 @@ async function upcomingSeries() {
 }
 
 /* =========================================================
+   UPCOMING
+   MIXED UPCOMING MOVIES + SERIES
+========================================================= */
+
+async function upcoming() {
+
+  const [
+    movies,
+    series
+  ] = await Promise.all([
+    upcomingMovies(),
+    upcomingSeries()
+  ]);
+
+  return interleaveCatalogRows(
+    movies,
+    series
+  );
+}
+
+/* =========================================================
    16. TOP PICKS
    MIXED MOVIES + SERIES
 ========================================================= */
@@ -2370,39 +2294,19 @@ builder.defineCatalogHandler(
 
       switch (args.id) {
 
+        case "top-picks":
+          metas =
+            await topPicks();
+          break;
+
+        case "trending-now":
+          metas =
+            await trendingNow();
+          break;
+
         case "airing-today":
           metas =
             await airingToday();
-          break;
-
-        case "new-episodes":
-          metas =
-            await newEpisodes();
-          break;
-
-        case "calendar-videos":
-          metas =
-            await calendarVideos();
-          break;
-
-          case "top-picks":
-  metas =
-    await topPicks();
-  break;
-
-        case "top10-week":
-          metas =
-            await top10Week();
-          break;
-
-        case "top10-movies-week":
-          metas =
-            await top10MoviesWeek();
-          break;
-
-        case "top10-series-week":
-          metas =
-            await top10SeriesWeek();
           break;
 
         case "new-releases":
@@ -2410,44 +2314,9 @@ builder.defineCatalogHandler(
             await newReleases();
           break;
 
-        case "anime-series":
-          metas =
-            await animeSeries();
-          break;
-
-        case "trending-animation":
-          metas =
-            await trendingAnimation();
-          break;
-
-        case "trending-movies":
-          metas =
-            await trendingMovies();
-          break;
-
-        case "trending-series":
-          metas =
-            await trendingSeries();
-          break;
-
-        case "popular-movies":
-          metas =
-            await popularMovies();
-          break;
-
         case "in-theatres":
           metas =
             await inTheatres();
-          break;
-
-        case "top-rated-movies":
-          metas =
-            await topRatedMovies();
-          break;
-
-        case "most-rated-movies":
-          metas =
-            await mostRatedMovies();
           break;
 
         case "now-playing":
@@ -2455,44 +2324,9 @@ builder.defineCatalogHandler(
             await nowPlaying();
           break;
 
-        case "upcoming-movies":
+        case "upcoming":
           metas =
-            await upcomingMovies();
-          break;
-
-        case "newly-released-movies":
-          metas =
-            await newlyReleasedMovies();
-          break;
-
-        case "popular-series":
-          metas =
-            await popularSeries();
-          break;
-
-        case "top-rated-series":
-          metas =
-            await topRatedSeries();
-          break;
-
-        case "most-rated-series":
-          metas =
-            await mostRatedSeries();
-          break;
-
-        case "on-the-air":
-          metas =
-            await onTheAir();
-          break;
-
-        case "newly-released-series":
-          metas =
-            await newlyReleasedSeries();
-          break;
-
-        case "upcoming-series":
-          metas =
-            await upcomingSeries();
+            await upcoming();
           break;
 
         default:
@@ -2574,5 +2408,5 @@ serveHTTP(
 );
 
 console.log(
-  `TMDB WuPlay Home Catalogs v1.0.3 listening on port ${PORT}`
+  `TMDB WuPlay Home Catalogs v1.0.0 listening on port ${PORT}`
 );
