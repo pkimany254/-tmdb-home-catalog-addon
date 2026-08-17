@@ -708,72 +708,6 @@ async function digitalOnly(items) {
 }
 
 /* =========================================================
-   1. TRENDING IN KENYA
-========================================================= */
-
-async function trendingKenya() {
-
-  const [
-    movies,
-    tv
-  ] = await Promise.all([
-
-    tmdb(
-      "/discover/movie",
-      {
-        watch_region: "KE",
-        sort_by: "popularity.desc",
-        include_adult: "false",
-        page: 1
-      }
-    ),
-
-    tmdb(
-      "/discover/tv",
-      {
-        watch_region: "KE",
-        sort_by: "popularity.desc",
-        include_adult: "false",
-        page: 1
-      }
-    )
-  ]);
-
-  const movieItems =
-    withoutAnime(
-      (movies.results || [])
-        .map(x => ({
-          ...x,
-          media_type: "movie"
-        }))
-    );
-
-  const digitalMovies =
-    await digitalOnly(
-      movieItems
-    );
-
-  const seriesItems =
-    withoutAnime(
-      (tv.results || [])
-        .map(x => ({
-          ...x,
-          media_type: "tv"
-        }))
-    );
-
-  const combined =
-    sortPopularity([
-      ...digitalMovies,
-      ...seriesItems
-    ]);
-
-  return mixedMeta(
-    dedupe(combined)
-  ).slice(0, 100);
-}
-
-/* =========================================================
    2. AIRING TODAY
 ========================================================= */
 
@@ -1329,8 +1263,8 @@ async function trendingAnimation() {
 
 async function trendingMovies() {
 
-  const target = 100;
-  const maxPages = 10;
+  const target = 200;
+  const maxPages = 20;
 
   let validMovies = [];
   let page = 1;
@@ -1414,8 +1348,8 @@ async function trendingMovies() {
 
 async function trendingSeries() {
 
-  const target = 100;
-  const maxPages = 10;
+  const target = 200;
+  const maxPages = 20;
 
   let validSeries = [];
   let page = 1;
@@ -1500,8 +1434,8 @@ async function trendingSeries() {
 
 async function popularMovies() {
 
-  const target = 100;
-  const maxPages = 10;
+  const target = 200;
+  const maxPages = 20;
 
   let validMovies = [];
   let page = 1;
@@ -1968,7 +1902,7 @@ async function popularSeries() {
     await tmdbPages(
       "/tv/popular",
       {},
-      10
+      20
     );
 
   series =
@@ -1997,7 +1931,7 @@ async function popularSeries() {
     dedupe(series)
   )
     .map(seriesMeta)
-    .slice(0, 100);
+    .slice(0, 200);
 }
 
 async function topRatedSeries() {
