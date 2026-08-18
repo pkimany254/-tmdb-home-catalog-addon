@@ -676,7 +676,8 @@ async function newReleases() {
       movies
         .filter(
           x =>
-            (x.popularity || 0) >= 2 
+            (x.popularity || 0) >= 2 &&
+            x.original_language === "en"
         )
         .map(x => ({
           ...x,
@@ -694,7 +695,8 @@ async function newReleases() {
       tv
         .filter(
           x =>
-            (x.popularity || 0) >= 2 
+            (x.popularity || 0) >= 2 &&
+            x.original_language === "en"
         )
         .map(x => ({
           ...x,
