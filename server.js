@@ -13,6 +13,18 @@ const PUBLIC_URL =
   `http://127.0.0.1:${PORT}`;
 const KEY = process.env.TMDB_API_KEY;
 
+const MAIN_LANGUAGES = new Set([
+  "en", // English
+  "es", // Spanish
+  "fr", // French
+  "de", // German
+  "it", // Italian
+  "ja", // Japanese
+  "ko", // Korean
+  "zh", // Chinese
+  "pt"  // Portuguese
+]);
+
 const manifest = {
   id: "org.pkimany254.tmdb-home-catalogs",
   version: "1.0.0",
@@ -295,7 +307,8 @@ function movieMeta(x) {
     imdbRating: x.vote_average || undefined,
     _genreIds: x.genre_ids || [],
     _mediaType: "movie",
-    _inCinemas: Boolean(x.inCinemas)
+    _inCinemas: Boolean(x.inCinemas),
+    _originalLanguage: x.original_language
   };
 }
 
@@ -310,7 +323,8 @@ function seriesMeta(x) {
     releaseInfo: x.first_air_date || undefined,
     imdbRating: x.vote_average || undefined,
     _genreIds: x.genre_ids || [],
-    _mediaType: "series"
+    _mediaType: "series",
+    _originalLanguage: x.original_language
   };
 }
 
@@ -1082,7 +1096,7 @@ async function inTheatres() {
     await tmdbPages(
       "/movie/now_playing",
       {},
-      3
+      10
     );
 
   movies =
@@ -1677,7 +1691,17 @@ builder.defineCatalogHandler(
           Boolean(meta.poster)
       );
 
-    // Global unwanted-genre filter
+    // Global main-language filter
+    metas =
+  metas.filter(
+    meta =>
+      MAIN_LANGUAGES.has(
+        meta._originalLanguage
+      )
+  );
+
+    
+      // Global unwanted-genre filter
     metas =
       metas.filter(
         meta =>
