@@ -1,5 +1,8 @@
-const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
+const { addonBuilder, getRouter } = require("stremio-addon-sdk");
+const express = require("express");
 
+const fs = require("fs");
+const path = require("path");
 const sharp = require("sharp");
 
 const API = "https://api.themoviedb.org/3";
@@ -186,18 +189,113 @@ function img(path, size = "w500") {
   return path ? `${IMG}/${size}${path}` : undefined;
 }
 
+async function cinemaPoster(x) {
+
+  if (
+    !x.inCinemas ||
+    !x.poster_path
+  ) {
+    return img(x.poster_path);
+  }
+
+  const fileName =
+    `tmdb-${x.id}.jpg`;
+
+  const outputPath =
+    path.join(
+      __dirname,
+      "public",
+      "cinema",
+      fileName
+    );
+
+  const publicUrl =
+  `${PUBLIC_URL}/public/cinema/${fileName}`;
+
+  // Use cached generated poster if it already exists
+  if (
+    fs.existsSync(outputPath)
+  ) {
+    return publicUrl;
+  }
+
+  try {
+
+    const posterUrl =
+      img(
+        x.poster_path,
+        "w500"
+      );
+
+    const posterResponse =
+      await fetch(posterUrl);
+
+    if (!posterResponse.ok) {
+      return img(x.poster_path);
+    }
+
+    const posterBuffer =
+      Buffer.from(
+        await posterResponse.arrayBuffer()
+      );
+
+    const badgePath =
+      path.join(
+        __dirname,
+        "assets",
+        "in-cinema.png"
+      );
+
+    const badge =
+      await sharp(badgePath)
+        .trim()
+        .resize({
+          width: 150
+        })
+        .png()
+        .toBuffer();
+
+    await sharp(posterBuffer)
+      .composite([
+        {
+          input: badge,
+          gravity: "northeast"
+        }
+      ])
+      .jpeg({
+        quality: 90
+      })
+      .toFile(outputPath);
+
+    return publicUrl;
+
+  } catch (error) {
+
+    console.error(
+      `Cinema poster failed for TMDB ${x.id}:`,
+      error
+    );
+
+    // Very important:
+    // if badge generation fails,
+    // keep the normal poster.
+    return img(x.poster_path);
+  }
+}
+
 function movieMeta(x) {
   return {
     id: `tmdb:${x.id}`,
     type: "movie",
     name: x.title || x.name,
-    poster: img(x.poster_path),
+    poster: x._cinemaPoster || img(x.poster_path),
     background: img(x.backdrop_path, "w1280"),
     description: x.overview || undefined,
     releaseInfo: x.release_date || undefined,
     imdbRating: x.vote_average || undefined,
     _genreIds: x.genre_ids || [],
-    _mediaType: "movie"
+    _mediaType: "movie",
+    _inCinemas: Boolean(x.inCinemas)
   };
 }
 
@@ -751,6 +849,20 @@ async function newReleases() {
       ...finalMovies,
       ...seriesItems
     ]);
+
+  for (
+  const item of combined
+) {
+
+  if (
+    item.media_type === "movie" &&
+    item.inCinemas
+  ) {
+
+    item._cinemaPoster =
+      await cinemaPoster(item);
+  }
+}
 
   console.log(
   "NEW RELEASES:",
@@ -1601,13 +1713,35 @@ builder.defineCatalogHandler(
    START SERVER
 ========================================================= */
 
-serveHTTP(
-  builder.getInterface(),
-  {
-    port: PORT
-  }
+const app = express();
+
+// Stremio addon routes
+app.use(
+  getRouter(
+    builder.getInterface()
+  )
 );
 
-console.log(
-  `TMDB WuPlay Home Catalogs v1.0.0 listening on port ${PORT}`
+// Serve generated cinema posters
+app.use(
+  "/public",
+  express.static(
+    path.join(
+      __dirname,
+      "public"
+    )
+  )
+);
+
+app.listen(
+  PORT,
+  () => {
+    console.log(
+      `TMDB WuPlay Home Catalogs v1.0.0 listening on port ${PORT}`
+    );
+
+    console.log(
+      `HTTP addon accessible at: http://127.0.0.1:${PORT}/manifest.json`
+    );
+  }
 );
