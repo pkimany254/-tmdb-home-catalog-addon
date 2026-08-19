@@ -1,8 +1,13 @@
 const { addonBuilder, serveHTTP } = require("stremio-addon-sdk");
 
+const sharp = require("sharp");
+
 const API = "https://api.themoviedb.org/3";
 const IMG = "https://image.tmdb.org/t/p";
 const PORT = process.env.PORT || 7000;
+const PUBLIC_URL =
+  process.env.ADDON_URL ||
+  `http://127.0.0.1:${PORT}`;
 const KEY = process.env.TMDB_API_KEY;
 
 const manifest = {
@@ -186,17 +191,16 @@ function movieMeta(x) {
     id: `tmdb:${x.id}`,
     type: "movie",
     name: x.title || x.name,
-    poster: img(x.poster_path),
+   poster:
+  x.inCinemas
+    ? `${PUBLIC_URL}/cinema-poster?path=${encodeURIComponent(x.poster_path)}`
+    : img(x.poster_path),
     background: img(x.backdrop_path, "w1280"),
     description: x.overview || undefined,
     releaseInfo: x.release_date || undefined,
     imdbRating: x.vote_average || undefined,
     _genreIds: x.genre_ids || [],
-    _mediaType: "movie",
-
-    badge: x.inCinemas
-      ? "IN CINEMAS"
-      : undefined
+    _mediaType: "movie"
   };
 }
 
@@ -751,7 +755,12 @@ async function newReleases() {
       ...seriesItems
     ]);
 
-  return mixedMeta(
+  console.log(
+  "NEW RELEASES:",
+  combined.length
+);
+
+    return mixedMeta(
     dedupe(combined)
   ).slice(0, 200);
 }
