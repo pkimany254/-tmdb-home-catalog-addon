@@ -250,7 +250,7 @@ async function cinemaPoster(x) {
       await sharp(badgePath)
         .trim()
         .resize({
-          width: 150
+          width: 250
         })
         .png()
         .toBuffer();
