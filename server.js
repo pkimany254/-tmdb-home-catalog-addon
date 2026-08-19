@@ -192,7 +192,11 @@ function movieMeta(x) {
     releaseInfo: x.release_date || undefined,
     imdbRating: x.vote_average || undefined,
     _genreIds: x.genre_ids || [],
-    _mediaType: "movie"
+    _mediaType: "movie",
+
+    badge: x.inCinemas
+      ? "IN CINEMAS"
+      : undefined
   };
 }
 
@@ -671,13 +675,16 @@ async function newReleases() {
     )
   ]);
 
+  /* -------------------------------------------------------
+     MOVIES
+     ------------------------------------------------------- */
+
   const movieItems =
     withoutAnime(
       movies
         .filter(
           x =>
-            (x.popularity || 0) >= 2 &&
-            x.original_language === "en"
+            (x.popularity || 0) >= 2
         )
         .map(x => ({
           ...x,
@@ -685,18 +692,48 @@ async function newReleases() {
         }))
     );
 
+  /*
+   * Find movies that already have a digital release.
+   */
+
   const digitalMovies =
     await digitalOnly(
       movieItems
     );
+
+  const digitalIds =
+    new Set(
+      digitalMovies.map(
+        x => x.id
+      )
+    );
+
+  /*
+   * Keep ALL movies.
+   *
+   * Movies without a digital release are marked
+   * so we can identify them as IN CINEMAS.
+   */
+
+  const finalMovies =
+    movieItems.map(
+      x => ({
+        ...x,
+        inCinemas:
+          !digitalIds.has(x.id)
+      })
+    );
+
+  /* -------------------------------------------------------
+     SERIES
+     ------------------------------------------------------- */
 
   const seriesItems =
     withoutAnime(
       tv
         .filter(
           x =>
-            (x.popularity || 0) >= 2 &&
-            x.original_language === "en"
+            (x.popularity || 0) >= 2
         )
         .map(x => ({
           ...x,
@@ -704,9 +741,13 @@ async function newReleases() {
         }))
     );
 
+  /* -------------------------------------------------------
+     COMBINE
+     ------------------------------------------------------- */
+
   const combined =
     sortPopularity([
-      ...digitalMovies,
+      ...finalMovies,
       ...seriesItems
     ]);
 
