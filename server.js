@@ -1096,7 +1096,7 @@ async function inTheatres() {
     await tmdbPages(
       "/movie/now_playing",
       {},
-      10
+      20
     );
 
   movies =
