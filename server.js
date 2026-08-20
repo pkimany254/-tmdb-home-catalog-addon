@@ -271,7 +271,7 @@ async function cinemaPoster(x) {
       .composite([
         {
           input: badge,
-          gravity: "northeast"
+          gravity: "north"
         }
       ])
       .jpeg({
@@ -716,7 +716,7 @@ async function airingToday() {
     await tmdbPages(
       "/tv/airing_today",
       {},
-      10
+      50
     );
 
   shows =
@@ -1195,7 +1195,7 @@ async function inTheatres() {
 async function nowPlayingMovies() {
 
   const releaseWindowDays = 3;
-  const pagesToScan = 20;
+  const pagesToScan = 50;
   const resultLimit = 100;
 
   const startDate =
