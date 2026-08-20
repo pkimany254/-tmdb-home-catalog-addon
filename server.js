@@ -1194,8 +1194,8 @@ async function inTheatres() {
 
 async function nowPlayingMovies() {
 
-  const releaseWindowDays = 2;
-  const pagesToScan = 3;
+  const releaseWindowDays = 3;
+  const pagesToScan = 20;
   const resultLimit = 100;
 
   const startDate =
