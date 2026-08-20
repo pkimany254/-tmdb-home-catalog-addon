@@ -262,7 +262,7 @@ async function cinemaPoster(x) {
       await sharp(badgePath)
         .trim()
         .resize({
-          width: 250
+          width: 350
         })
         .png()
         .toBuffer();
@@ -567,17 +567,24 @@ function dedupe(items) {
   });
 }
 
-function day(offset = 0) {
+function kenyaDate(offset = 0) {
+  const now = new Date();
 
-  const d = new Date();
-
-  d.setUTCDate(
-    d.getUTCDate() + offset
+  const kenyaNow = new Date(
+    now.toLocaleString("en-US", {
+      timeZone: "Africa/Nairobi"
+    })
   );
 
-  return d
-    .toISOString()
-    .slice(0, 10);
+  kenyaNow.setDate(
+    kenyaNow.getDate() + offset
+  );
+
+  return [
+    kenyaNow.getFullYear(),
+    String(kenyaNow.getMonth() + 1).padStart(2, "0"),
+    String(kenyaNow.getDate()).padStart(2, "0")
+  ].join("-");
 }
 
 async function tmdbPages(
