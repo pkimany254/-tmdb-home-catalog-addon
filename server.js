@@ -567,24 +567,10 @@ function dedupe(items) {
   });
 }
 
-function kenyaDate(offset = 0) {
-  const now = new Date();
-
-  const kenyaNow = new Date(
-    now.toLocaleString("en-US", {
-      timeZone: "Africa/Nairobi"
-    })
-  );
-
-  kenyaNow.setDate(
-    kenyaNow.getDate() + offset
-  );
-
-  return [
-    kenyaNow.getFullYear(),
-    String(kenyaNow.getMonth() + 1).padStart(2, "0"),
-    String(kenyaNow.getDate()).padStart(2, "0")
-  ].join("-");
+function day(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0, 10);
 }
 
 async function tmdbPages(
