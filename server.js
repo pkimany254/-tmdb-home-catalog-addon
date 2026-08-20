@@ -766,7 +766,7 @@ async function newReleases() {
         include_adult:
           "false"
       },
-      20
+      50
     ),
 
     tmdbPages(
@@ -784,7 +784,7 @@ async function newReleases() {
         include_adult:
           "false"
       },
-      20
+      50
     )
   ]);
 
@@ -1096,7 +1096,7 @@ async function inTheatres() {
     await tmdbPages(
       "/movie/now_playing",
       {},
-      50
+      100
     );
 
   movies =
