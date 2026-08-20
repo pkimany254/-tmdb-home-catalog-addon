@@ -568,9 +568,16 @@ function dedupe(items) {
 }
 
 function day(offset = 0) {
+
   const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.toISOString().slice(0, 10);
+
+  d.setUTCDate(
+    d.getUTCDate() + offset
+  );
+
+  return d
+    .toISOString()
+    .slice(0, 10);
 }
 
 async function tmdbPages(
