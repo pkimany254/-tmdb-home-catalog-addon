@@ -300,7 +300,7 @@ function movieMeta(x) {
     id: `tmdb:${x.id}`,
     type: "movie",
     name: x.title || x.name,
-    poster: x._cinemaPoster || img(x.poster_path),
+    poster: img(x.poster_path),
     background: img(x.backdrop_path, "w1280"),
     description: x.overview || undefined,
     releaseInfo: x.release_date || undefined,
