@@ -484,7 +484,6 @@ const EXCLUDED_TV_GENRES =
 const EXCLUDED_MOVIE_GENRES =
   new Set([
     99,     // Documentary
-    10402,  // Music
     10770   // TV Movie
   ]);
 
