@@ -36,6 +36,7 @@ const manifest = {
 
   catalogs: [
     { id: "top-picks", type: "movie", name: "Monthly Top Picks", extra: [{ name: "skip", isRequired: false }] },
+    { id: "best-of-year", type: "movie", name: "Best of the Year", extra: [{ name: "skip", isRequired: false }] },
     { id: "trending-now", type: "movie", name: "Trending", extra: [{ name: "skip", isRequired: false }] },
     { id: "popular", type: "movie", name: "Popular", extra: [{ name: "skip", isRequired: false }] },
     { id: "now-playing", type: "movie", name: "Available Today", extra: [{ name: "skip", isRequired: false }] },
@@ -1643,6 +1644,165 @@ async function popular() {
       sortPopularity(combined)
     )
   ).slice(0, 200);
+}
+
+/* =========================================================
+   10. BEST OF THE YEAR
+   MIXED MOVIES + SERIES
+========================================================= */
+
+async function bestOfYear() {
+
+  const today =
+    day();
+
+  const yearStart =
+    `${new Date().getFullYear()}-01-01`;
+
+  const [
+    movies,
+    series
+  ] = await Promise.all([
+
+    tmdbPages(
+      "/discover/movie",
+      {
+        sort_by:
+          "popularity.desc",
+
+        "vote_average.gte":
+          7,
+
+        "vote_count.gte":
+          500,
+
+        "primary_release_date.gte":
+          yearStart,
+
+        "primary_release_date.lte":
+          today,
+
+        include_adult:
+          "false"
+      },
+      10
+    ),
+
+    tmdbPages(
+      "/discover/tv",
+      {
+        sort_by:
+          "popularity.desc",
+
+        "vote_average.gte":
+          7,
+
+        "vote_count.gte":
+          500,
+
+        "first_air_date.gte":
+          yearStart,
+
+        "first_air_date.lte":
+          today,
+
+        include_adult:
+          "false"
+      },
+      10
+    )
+
+  ]);
+
+  /* -------------------------------------------------------
+     MOVIES
+  ------------------------------------------------------- */
+
+  let movieItems =
+    withoutAnime(movies);
+
+  movieItems =
+    withoutExcludedGenres(
+      movieItems,
+      "movie"
+    );
+
+  movieItems =
+    movieItems.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  /* -------------------------------------------------------
+     SERIES
+  ------------------------------------------------------- */
+
+  let seriesItems =
+    withoutAnime(series);
+
+  seriesItems =
+    withoutExcludedGenres(
+      seriesItems,
+      "series"
+    );
+
+  seriesItems =
+    seriesItems.map(x => ({
+      ...x,
+      media_type: "tv"
+    }));
+
+  /* -------------------------------------------------------
+     COMBINE
+  ------------------------------------------------------- */
+
+  let combined = [
+    ...movieItems,
+    ...seriesItems
+  ];
+
+  /*
+   * Quality-focused ranking.
+   * Rating is strongest, while vote count
+   * and popularity also contribute.
+   */
+
+  combined =
+    combined.sort(
+      (a, b) => {
+
+        const scoreA =
+          (a.vote_average || 0) * 10 +
+          Math.log10(
+            (a.vote_count || 0) + 1
+          ) * 8 +
+          Math.min(
+            a.popularity || 0,
+            100
+          ) * 0.15;
+
+        const scoreB =
+          (b.vote_average || 0) * 10 +
+          Math.log10(
+            (b.vote_count || 0) + 1
+          ) * 8 +
+          Math.min(
+            b.popularity || 0,
+            100
+          ) * 0.15;
+
+        return scoreB - scoreA;
+      }
+    );
+
+  console.log(
+    "BEST OF THE YEAR:",
+    combined.length
+  );
+
+  return mixedMeta(
+    dedupe(combined)
+  ).slice(0, 100);
 }
 
 /* =========================================================
