@@ -41,7 +41,7 @@ const manifest = {
     { id: "popular", type: "movie", name: "Popular", extra: [{ name: "skip", isRequired: false }] },
     { id: "now-playing", type: "movie", name: "Available Today", extra: [{ name: "skip", isRequired: false }] },
     { id: "new-releases", type: "movie", name: "All New", extra: [{ name: "skip", isRequired: false }] },
-    { id: "in-theatres", type: "movie", name: "In Theatres", extra: [{ name: "skip", isRequired: false }] },
+    { id: "in-theatres", type: "movie", name: "In Theaters", extra: [{ name: "skip", isRequired: false }] },
     { id: "upcoming", type: "movie", name: "Upcoming", extra: [{ name: "skip", isRequired: false }] }
   ]
 };
@@ -998,7 +998,7 @@ async function trendingSeries() {
 
 
 /* =========================================================
-   5. IN THEATRES
+   5. IN THEATERS
 ========================================================= */
 
 async function inTheatres() {
