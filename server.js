@@ -1747,9 +1747,24 @@ builder.defineCatalogHandler(
             await topPicks();
           break;
 
+        case "best-of-year":
+          metas =
+            await bestOfYear();
+          break;
+
         case "trending-now":
           metas =
             await trendingNow();
+          break;
+
+        case "popular":
+          metas =
+            await popular();
+          break;
+
+        case "now-playing":
+          metas =
+            await nowPlaying();
           break;
 
         case "new-releases":
@@ -1760,11 +1775,6 @@ builder.defineCatalogHandler(
         case "in-theatres":
           metas =
             await inTheatres();
-          break;
-
-        case "now-playing":
-          metas =
-            await nowPlaying();
           break;
 
         case "upcoming":
@@ -1786,7 +1796,6 @@ builder.defineCatalogHandler(
     }
 
     /*
-     * NEW:
      * Convert TMDB IDs into canonical IMDb IDs
      * before WuPlay receives the catalog.
      */
@@ -1809,15 +1818,14 @@ builder.defineCatalogHandler(
 
     // Global main-language filter
     metas =
-  metas.filter(
-    meta =>
-      MAIN_LANGUAGES.has(
-        meta._originalLanguage
-      )
-  );
+      metas.filter(
+        meta =>
+          MAIN_LANGUAGES.has(
+            meta._originalLanguage
+          )
+      );
 
-    
-      // Global unwanted-genre filter
+    // Global unwanted-genre filter
     metas =
       metas.filter(
         meta =>
@@ -1846,6 +1854,7 @@ builder.defineCatalogHandler(
 
       staleError: 86400
     };
+
   }
 );
 
