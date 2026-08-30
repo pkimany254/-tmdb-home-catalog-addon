@@ -37,8 +37,8 @@ const manifest = {
   catalogs: [
     { id: "top-picks", type: "movie", name: "Best of the Month", extra: [{ name: "skip", isRequired: false }] },
     { id: "best-of-year", type: "movie", name: "Best of the Year", extra: [{ name: "skip", isRequired: false }] },
-    { id: "trending-now", type: "movie", name: "Trending", extra: [{ name: "skip", isRequired: false }] },
-    { id: "popular", type: "movie", name: "Popular", extra: [{ name: "skip", isRequired: false }] },
+    { id: "trending-now", type: "movie", name: "All Trending", extra: [{ name: "skip", isRequired: false }] },
+    { id: "popular", type: "movie", name: "All Popular", extra: [{ name: "skip", isRequired: false }] },
     { id: "now-playing", type: "movie", name: "Available Today", extra: [{ name: "skip", isRequired: false }] },
     { id: "new-releases", type: "movie", name: "All New", extra: [{ name: "skip", isRequired: false }] },
     { id: "in-theatres", type: "movie", name: "In Theaters", extra: [{ name: "skip", isRequired: false }] },
@@ -827,7 +827,7 @@ async function newReleases() {
 }
 
 /* =========================================================
-   4. TRENDING
+   4. ALL TRENDING
    MIXED TRENDING MOVIES + SERIES
 ========================================================= */
 
@@ -1479,7 +1479,7 @@ async function topPicks() {
 }
 
 /* =========================================================
-   9. POPULAR
+   9. ALL POPULAR
    MIXED MOVIES + SERIES
 ========================================================= */
 
