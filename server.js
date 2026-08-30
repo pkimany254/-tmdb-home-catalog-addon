@@ -37,7 +37,7 @@ const manifest = {
   catalogs: [
     { id: "top-picks", type: "movie", name: "Monthly Top Picks", extra: [{ name: "skip", isRequired: false }] },
     { id: "trending-now", type: "movie", name: "Trending", extra: [{ name: "skip", isRequired: false }] },
-    { id: "now-playing", type: "movie", name: "Available Now", extra: [{ name: "skip", isRequired: false }] },
+    { id: "now-playing", type: "movie", name: "Available Today", extra: [{ name: "skip", isRequired: false }] },
     { id: "new-releases", type: "movie", name: "New Releases", extra: [{ name: "skip", isRequired: false }] },
     { id: "in-theatres", type: "movie", name: "In Theatres", extra: [{ name: "skip", isRequired: false }] },
     { id: "upcoming", type: "movie", name: "Upcoming", extra: [{ name: "skip", isRequired: false }] }
@@ -1134,7 +1134,7 @@ async function inTheatres() {
 }
 
 /* =========================================================
-   6. AVAILABLE NOW
+   6. AVAILABLE TODAY
    MIXED MOVIES + AIRING TODAY SERIES
 ========================================================= */
 
@@ -1579,6 +1579,98 @@ async function topPicks() {
   return mixedMeta(
     dedupe(combined)
   ).slice(0, 20);
+}
+
+/* =========================================================
+   9. POPULAR
+   MIXED MOVIES + SERIES
+========================================================= */
+
+async function popular() {
+
+  const [
+    movies,
+    series
+  ] = await Promise.all([
+
+    tmdbPages(
+      "/discover/movie",
+      {
+        sort_by:
+          "popularity.desc",
+
+        include_adult:
+          "false"
+      },
+      100
+    ),
+
+    tmdbPages(
+      "/discover/tv",
+      {
+        sort_by:
+          "popularity.desc",
+
+        include_adult:
+          "false"
+      },
+      5
+    )
+
+  ]);
+
+  /* -------------------------------------------------------
+     MOVIES
+  ------------------------------------------------------- */
+
+  let movieItems =
+    withoutAnime(movies);
+
+  movieItems =
+    withoutExcludedGenres(
+      movieItems,
+      "movie"
+    );
+
+  movieItems =
+    movieItems.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  /* -------------------------------------------------------
+     SERIES
+  ------------------------------------------------------- */
+
+  let seriesItems =
+    withoutAnime(series);
+
+  seriesItems =
+    withoutExcludedGenres(
+      seriesItems,
+      "series"
+    );
+
+  seriesItems =
+    seriesItems.map(x => ({
+      ...x,
+      media_type: "tv"
+    }));
+
+  /* -------------------------------------------------------
+     COMBINE
+  ------------------------------------------------------- */
+
+  const combined = [
+    ...movieItems,
+    ...seriesItems
+  ];
+
+  return mixedMeta(
+    dedupe(
+      sortPopularity(combined)
+    )
+  ).slice(0, 200);
 }
 
 /* =========================================================
