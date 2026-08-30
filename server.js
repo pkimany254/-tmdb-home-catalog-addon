@@ -917,7 +917,7 @@ async function trendingNow() {
 async function trendingMovies() {
 
   const target = 200;
-  const maxPages = 20;
+  const maxPages = 100;
 
   let validMovies = [];
   let page = 1;
@@ -988,7 +988,7 @@ async function trendingMovies() {
 async function trendingSeries() {
 
   const target = 200;
-  const maxPages = 20;
+  const maxPages = 100;
 
   let validSeries = [];
   let page = 1;
