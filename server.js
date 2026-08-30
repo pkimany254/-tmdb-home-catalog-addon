@@ -709,6 +709,8 @@ async function digitalOnly(items) {
 
 /* =========================================================
    3. NEW RELEASES
+   MIXED MOVIES + SERIES
+   LATEST RELEASES FIRST
 ========================================================= */
 
 async function newReleases() {
@@ -722,135 +724,104 @@ async function newReleases() {
       "/discover/movie",
       {
         "primary_release_date.gte":
-          day(-180),
+          day(-90),
 
         "primary_release_date.lte":
           day(),
 
         sort_by:
-          "popularity.desc",
+          "primary_release_date.desc",
 
         include_adult:
           "false"
       },
-      50
+      100
     ),
 
     tmdbPages(
       "/discover/tv",
       {
         "first_air_date.gte":
-          day(-180),
+          day(-90),
 
         "first_air_date.lte":
           day(),
 
         sort_by:
-          "popularity.desc",
+          "first_air_date.desc",
 
         include_adult:
           "false"
       },
-      50
+      100
     )
+
   ]);
 
   /* -------------------------------------------------------
      MOVIES
-     ------------------------------------------------------- */
+  ------------------------------------------------------- */
 
   const movieItems =
     withoutAnime(
-      movies
-        .filter(
-          x =>
-            (x.popularity || 0) >= 2
-        )
-        .map(x => ({
-          ...x,
-          media_type: "movie"
-        }))
-    );
-
-  /*
-   * Find movies that already have a digital release.
-   */
-
-  const digitalMovies =
-    await digitalOnly(
-      movieItems
-    );
-
-  const digitalIds =
-    new Set(
-      digitalMovies.map(
-        x => x.id
-      )
-    );
-
-  /*
-   * Keep ALL movies.
-   *
-   * Movies without a digital release are marked
-   * so we can identify them as IN CINEMAS.
-   */
-
-  const finalMovies =
-    movieItems.map(
-      x => ({
+      movies.map(x => ({
         ...x,
-        inCinemas:
-          !digitalIds.has(x.id)
-      })
+        media_type: "movie"
+      }))
     );
 
   /* -------------------------------------------------------
      SERIES
-     ------------------------------------------------------- */
+  ------------------------------------------------------- */
 
   const seriesItems =
     withoutAnime(
-      tv
-        .filter(
-          x =>
-            (x.popularity || 0) >= 2
-        )
-        .map(x => ({
-          ...x,
-          media_type: "tv"
-        }))
+      tv.map(x => ({
+        ...x,
+        media_type: "tv"
+      }))
     );
 
   /* -------------------------------------------------------
      COMBINE
-     ------------------------------------------------------- */
+  ------------------------------------------------------- */
 
-  const combined =
-    sortPopularity([
-      ...finalMovies,
-      ...seriesItems
-    ]);
+  const combined = [
+    ...movieItems,
+    ...seriesItems
+  ];
 
-  for (
-  const item of combined
-) {
+  /*
+   * Latest release/air date first.
+   * Popularity does NOT affect the order.
+   */
 
-  if (
-    item.media_type === "movie" &&
-    item.inCinemas
-  ) {
+  combined.sort(
+    (a, b) => {
 
-    item._cinemaPoster =
-      await cinemaPoster(item);
-  }
-}
+      const dateA =
+        a.media_type === "movie"
+          ? a.release_date
+          : a.first_air_date;
+
+      const dateB =
+        b.media_type === "movie"
+          ? b.release_date
+          : b.first_air_date;
+
+      return (
+        new Date(dateB || 0) -
+        new Date(dateA || 0)
+      );
+    }
+  );
 
   console.log(
-  "NEW RELEASES:",
-  combined.length
-);
+    "NEW RELEASES:",
+    combined.length
+  );
 
-    return mixedMeta(
+  return mixedMeta(
     dedupe(combined)
   ).slice(0, 200);
 }
