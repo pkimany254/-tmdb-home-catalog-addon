@@ -954,23 +954,16 @@ async function trendingMovies() {
           !existingIds.has(x.id)
       );
 
-    const digitalMovies =
-      await digitalOnly(
-        movies
-      );
-
     validMovies.push(
-      ...digitalMovies
-    );
+  ...movies
+);
 
     page++;
   }
 
-  return sortPopularity(
-    dedupe(validMovies)
-  )
-    .map(movieMeta)
-    .slice(0, target);
+ return dedupe(validMovies)
+  .map(movieMeta)
+  .slice(0, target);
 }
 
 /* =========================================================
@@ -1052,11 +1045,9 @@ async function trendingSeries() {
     page++;
   }
 
-  return sortPopularity(
-    dedupe(validSeries)
-  )
-    .map(seriesMeta)
-    .slice(0, target);
+ return dedupe(validSeries)
+  .map(seriesMeta)
+  .slice(0, target);
 }
 
 /* =========================================================
