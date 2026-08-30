@@ -1003,12 +1003,6 @@ async function trendingSeries() {
 
 async function inTheatres() {
 
-  const startDate =
-    day(-180);
-
-  const endDate =
-    day();
-
   let movies =
     await tmdbPages(
       "/movie/now_playing",
@@ -1017,27 +1011,7 @@ async function inTheatres() {
     );
 
   movies =
-    movies.filter(
-      x => {
-        const releaseDate =
-          x.release_date || "";
-
-        return (
-          releaseDate >= startDate &&
-          releaseDate <= endDate
-        );
-      }
-    );
-
-  movies =
     withoutAnime(movies);
-
-  movies =
-    movies.filter(
-      x =>
-        !(x.genre_ids || [])
-          .includes(16)
-    );
 
   movies =
     withoutExcludedGenres(
@@ -1051,56 +1025,7 @@ async function inTheatres() {
       media_type: "movie"
     }));
 
-  const withoutDigitalRelease = [];
-
-  let index = 0;
-
-  async function worker() {
-
-    while (
-      index < movies.length
-    ) {
-
-      const item =
-        movies[index++];
-
-      try {
-
-        if (
-          !(await hasDigitalRelease(item.id))
-        ) {
-          withoutDigitalRelease.push(item);
-        }
-
-      } catch (error) {
-
-        console.warn(
-          "Theatre digital release check failed:",
-          item.id,
-          error.message
-        );
-      }
-    }
-  }
-
-  const workerCount =
-    Math.min(
-      8,
-      movies.length
-    );
-
-  await Promise.all(
-    Array.from(
-      {
-        length: workerCount
-      },
-      worker
-    )
-  );
-
-  return sortPopularity(
-    dedupe(withoutDigitalRelease)
-  )
+  return dedupe(movies)
     .map(movieMeta)
     .slice(0, 100);
 }
