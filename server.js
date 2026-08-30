@@ -35,7 +35,7 @@ const manifest = {
   idPrefixes: ["tt", "tmdb:"],
 
   catalogs: [
-    { id: "top-picks", type: "movie", name: "Top Picks", extra: [{ name: "skip", isRequired: false }] },
+    { id: "top-picks", type: "movie", name: "Monthly Top Picks", extra: [{ name: "skip", isRequired: false }] },
     { id: "trending-now", type: "movie", name: "Trending", extra: [{ name: "skip", isRequired: false }] },
     { id: "now-playing", type: "movie", name: "Now Playing", extra: [{ name: "skip", isRequired: false }] },
     { id: "new-releases", type: "movie", name: "New Releases", extra: [{ name: "skip", isRequired: false }] },
@@ -707,40 +707,6 @@ async function digitalOnly(items) {
 }
 
 /* =========================================================
-   2. AIRING TODAY
-========================================================= */
-
-async function airingToday() {
-
-  let shows =
-    await tmdbPages(
-      "/tv/airing_today",
-      {},
-      50
-    );
-
-  shows =
-    withoutAnime(
-      shows
-    ).filter(
-      x =>
-        (x.popularity || 0) >= 10 &&
-         x.original_language === "en" &&
-        !(x.genre_ids || []).includes(16) &&
-        !(x.genre_ids || []).includes(35)
-    );
-
-  return shows
-    .sort(
-      (a, b) =>
-        (b.popularity || 0) -
-        (a.popularity || 0)
-    )
-    .map(seriesMeta)
-    .slice(0, 100);
-}
-
-/* =========================================================
    3. NEW RELEASES
 ========================================================= */
 
@@ -1168,6 +1134,27 @@ async function inTheatres() {
 }
 
 /* =========================================================
+   6. NOW PLAYING
+   MIXED MOVIES + AIRING TODAY SERIES
+========================================================= */
+
+async function nowPlaying() {
+
+  const [
+    movies,
+    series
+  ] = await Promise.all([
+    nowPlayingMovies(),
+    airingToday()
+  ]);
+
+  return interleaveCatalogRows(
+    movies,
+    series
+  );
+}
+
+/* =========================================================
    NOW PLAYING MOVIES
 ========================================================= */
 
@@ -1238,18 +1225,53 @@ async function nowPlayingMovies() {
 }
 
 /* =========================================================
-   NOW PLAYING
-   MIXED MOVIES + AIRING TODAY SERIES
+   AIRING TODAY
 ========================================================= */
 
-async function nowPlaying() {
+async function airingToday() {
+
+  let shows =
+    await tmdbPages(
+      "/tv/airing_today",
+      {},
+      50
+    );
+
+  shows =
+    withoutAnime(
+      shows
+    ).filter(
+      x =>
+        (x.popularity || 0) >= 10 &&
+         x.original_language === "en" &&
+        !(x.genre_ids || []).includes(16) &&
+        !(x.genre_ids || []).includes(35)
+    );
+
+  return shows
+    .sort(
+      (a, b) =>
+        (b.popularity || 0) -
+        (a.popularity || 0)
+    )
+    .map(seriesMeta)
+    .slice(0, 100);
+}
+
+
+/* =========================================================
+   7. UPCOMING
+   MIXED UPCOMING MOVIES + SERIES
+========================================================= */
+
+async function upcoming() {
 
   const [
     movies,
     series
   ] = await Promise.all([
-    nowPlayingMovies(),
-    airingToday()
+    upcomingMovies(),
+    upcomingSeries()
   ]);
 
   return interleaveCatalogRows(
@@ -1257,6 +1279,7 @@ async function nowPlaying() {
     series
   );
 }
+
 
 /* =========================================================
    UPCOMING MOVIES
@@ -1397,28 +1420,7 @@ async function upcomingSeries() {
 }
 
 /* =========================================================
-   UPCOMING
-   MIXED UPCOMING MOVIES + SERIES
-========================================================= */
-
-async function upcoming() {
-
-  const [
-    movies,
-    series
-  ] = await Promise.all([
-    upcomingMovies(),
-    upcomingSeries()
-  ]);
-
-  return interleaveCatalogRows(
-    movies,
-    series
-  );
-}
-
-/* =========================================================
-   TOP PICKS
+   8. MONTHLY TOP PICKS
    MIXED MOVIES + SERIES
 ========================================================= */
 
@@ -1427,8 +1429,8 @@ async function topPicks() {
   const today =
     day();
 
-  const oneYearAgo =
-    day(-365);
+  const oneMonthAgo =
+    day(-30);
 
   const [
     movies,
@@ -1448,7 +1450,7 @@ async function topPicks() {
           500,
 
         "primary_release_date.gte":
-          oneYearAgo,
+          oneMonthAgo,
 
         "primary_release_date.lte":
           today,
@@ -1472,7 +1474,7 @@ async function topPicks() {
           500,
 
         "first_air_date.gte":
-          oneYearAgo,
+          oneMonthAgo,
 
         "first_air_date.lte":
           today,
@@ -1482,21 +1484,15 @@ async function topPicks() {
       },
       5
     )
+
   ]);
 
   /* -------------------------------------------------------
      MOVIES
-     ------------------------------------------------------- */
+  ------------------------------------------------------- */
 
   let movieItems =
     withoutAnime(movies);
-
-  movieItems =
-    movieItems.filter(
-      x =>
-        !(x.genre_ids || [])
-          .includes(16)
-    );
 
   movieItems =
     withoutExcludedGenres(
@@ -1521,17 +1517,10 @@ async function topPicks() {
 
   /* -------------------------------------------------------
      SERIES
-     ------------------------------------------------------- */
+  ------------------------------------------------------- */
 
   let seriesItems =
     withoutAnime(series);
-
-  seriesItems =
-    seriesItems.filter(
-      x =>
-        !(x.genre_ids || [])
-          .includes(16)
-    );
 
   seriesItems =
     withoutExcludedGenres(
@@ -1547,7 +1536,7 @@ async function topPicks() {
 
   /* -------------------------------------------------------
      COMBINE
-     ------------------------------------------------------- */
+  ------------------------------------------------------- */
 
   let combined = [
     ...movieItems,
