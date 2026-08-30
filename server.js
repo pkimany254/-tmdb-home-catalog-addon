@@ -28,7 +28,7 @@ const MAIN_LANGUAGES = new Set([
 const manifest = {
   id: "org.pkimany254.tmdb-home-catalogs",
   version: "1.0.0",
-  name: "TMDB WuPlay Home Catalogs",
+  name: "TMDB Catalogs",
   description: "Catalog-only WuPlay/Stremio addon powered by TMDB.",
   resources: ["catalog"],
   types: ["movie", "series"],
