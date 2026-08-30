@@ -37,6 +37,7 @@ const manifest = {
   catalogs: [
     { id: "top-picks", type: "movie", name: "Monthly Top Picks", extra: [{ name: "skip", isRequired: false }] },
     { id: "trending-now", type: "movie", name: "Trending", extra: [{ name: "skip", isRequired: false }] },
+    { id: "popular", type: "movie", name: "Popular", extra: [{ name: "skip", isRequired: false }] },
     { id: "now-playing", type: "movie", name: "Available Today", extra: [{ name: "skip", isRequired: false }] },
     { id: "new-releases", type: "movie", name: "New Releases", extra: [{ name: "skip", isRequired: false }] },
     { id: "in-theatres", type: "movie", name: "In Theatres", extra: [{ name: "skip", isRequired: false }] },
