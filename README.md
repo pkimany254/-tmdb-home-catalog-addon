@@ -1,4 +1,4 @@
-# TMDB WuPlay Home Catalog Addon
+# TMDB Catalog Addon
 
 A catalog-only WuPlay/Stremio addon powered by TMDB. It provides homepage rows and metadata; it does not provide streams.
 
