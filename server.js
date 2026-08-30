@@ -35,12 +35,12 @@ const manifest = {
   idPrefixes: ["tt", "tmdb:"],
 
   catalogs: [
-    { id: "top-picks", type: "movie", name: "Monthly Top Picks", extra: [{ name: "skip", isRequired: false }] },
+    { id: "top-picks", type: "movie", name: "Best of the Month", extra: [{ name: "skip", isRequired: false }] },
     { id: "best-of-year", type: "movie", name: "Best of the Year", extra: [{ name: "skip", isRequired: false }] },
     { id: "trending-now", type: "movie", name: "Trending", extra: [{ name: "skip", isRequired: false }] },
     { id: "popular", type: "movie", name: "Popular", extra: [{ name: "skip", isRequired: false }] },
     { id: "now-playing", type: "movie", name: "Available Today", extra: [{ name: "skip", isRequired: false }] },
-    { id: "new-releases", type: "movie", name: "New Releases", extra: [{ name: "skip", isRequired: false }] },
+    { id: "new-releases", type: "movie", name: "All New", extra: [{ name: "skip", isRequired: false }] },
     { id: "in-theatres", type: "movie", name: "In Theatres", extra: [{ name: "skip", isRequired: false }] },
     { id: "upcoming", type: "movie", name: "Upcoming", extra: [{ name: "skip", isRequired: false }] }
   ]
@@ -708,7 +708,7 @@ async function digitalOnly(items) {
 }
 
 /* =========================================================
-   3. NEW RELEASES
+   3. ALL NEW
    MIXED MOVIES + SERIES
    LATEST RELEASES FIRST
 ========================================================= */
@@ -1392,7 +1392,7 @@ async function upcomingSeries() {
 }
 
 /* =========================================================
-   8. MONTHLY TOP PICKS
+   8. BEST OF THE MONTH
    MIXED MOVIES + SERIES
 ========================================================= */
 
