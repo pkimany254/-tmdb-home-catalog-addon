@@ -36,7 +36,7 @@ const manifest = {
 
   catalogs: [
     { id: "top-picks", type: "movie", name: "Top Picks", extra: [{ name: "skip", isRequired: false }] },
-    { id: "trending-now", type: "movie", name: "Trending Now", extra: [{ name: "skip", isRequired: false }] },
+    { id: "trending-now", type: "movie", name: "Trending", extra: [{ name: "skip", isRequired: false }] },
     { id: "now-playing", type: "movie", name: "Now Playing", extra: [{ name: "skip", isRequired: false }] },
     { id: "new-releases", type: "movie", name: "New Releases", extra: [{ name: "skip", isRequired: false }] },
     { id: "in-theatres", type: "movie", name: "In Theatres", extra: [{ name: "skip", isRequired: false }] },
@@ -741,7 +741,7 @@ async function airingToday() {
 }
 
 /* =========================================================
-   NEW RELEASES
+   3. NEW RELEASES
 ========================================================= */
 
 async function newReleases() {
@@ -889,6 +889,28 @@ async function newReleases() {
 }
 
 /* =========================================================
+   4. TRENDING
+   MIXED TRENDING MOVIES + SERIES
+========================================================= */
+
+async function trendingNow() {
+
+  const [
+    movies,
+    series
+  ] = await Promise.all([
+    trendingMovies(),
+    trendingSeries()
+  ]);
+
+  return interleaveCatalogRows(
+    movies,
+    series
+  );
+}
+
+
+/* =========================================================
    TRENDING MOVIES
 ========================================================= */
 
@@ -921,13 +943,6 @@ async function trendingMovies() {
 
     movies =
       withoutAnime(movies);
-
-    movies =
-      movies.filter(
-        x =>
-          !(x.genre_ids || [])
-            .includes(16)
-      );
 
     movies =
       withoutExcludedGenres(
@@ -1001,13 +1016,6 @@ async function trendingSeries() {
       withoutAnime(series);
 
     series =
-      series.filter(
-        x =>
-          !(x.genre_ids || [])
-            .includes(16)
-      );
-
-    series =
       withoutExcludedGenres(
         series,
         "series"
@@ -1050,29 +1058,9 @@ async function trendingSeries() {
   .slice(0, target);
 }
 
-/* =========================================================
-   TRENDING NOW
-   MIXED TRENDING MOVIES + SERIES
-========================================================= */
-
-async function trendingNow() {
-
-  const [
-    movies,
-    series
-  ] = await Promise.all([
-    trendingMovies(),
-    trendingSeries()
-  ]);
-
-  return interleaveCatalogRows(
-    movies,
-    series
-  );
-}
 
 /* =========================================================
-   IN THEATRES
+   5. IN THEATRES
 ========================================================= */
 
 async function inTheatres() {
