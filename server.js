@@ -1542,7 +1542,7 @@ async function bestOfYear() {
           "popularity.desc",
 
         "vote_average.gte":
-          6.5,
+          6.0,
 
         "vote_count.gte":
           300,
@@ -1566,7 +1566,7 @@ async function bestOfYear() {
           "popularity.desc",
 
         "vote_average.gte":
-          6.5,
+          6.0,
 
         "vote_count.gte":
           300,
