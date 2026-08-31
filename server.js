@@ -735,7 +735,7 @@ async function newReleases() {
         include_adult:
           "false"
       },
-      100
+      50
     ),
 
     tmdbPages(
@@ -753,7 +753,7 @@ async function newReleases() {
         include_adult:
           "false"
       },
-      100
+      50
     )
 
   ]);
@@ -854,8 +854,8 @@ async function trendingNow() {
 
 async function trendingMovies() {
 
-  const target = 200;
-  const maxPages = 100;
+  const target = 100;
+  const maxPages = 50;
 
   let validMovies = [];
   let page = 1;
@@ -925,8 +925,8 @@ async function trendingMovies() {
 
 async function trendingSeries() {
 
-  const target = 200;
-  const maxPages = 100;
+  const target = 100;
+  const maxPages = 50;
 
   let validSeries = [];
   let page = 1;
@@ -1007,7 +1007,7 @@ async function inTheatres() {
     await tmdbPages(
       "/movie/now_playing",
       {},
-      100
+      50
     );
 
   movies =
@@ -1499,7 +1499,7 @@ async function popular() {
         include_adult:
           "false"
       },
-      100
+      50
     ),
 
     tmdbPages(
@@ -1511,7 +1511,7 @@ async function popular() {
         include_adult:
           "false"
       },
-      5
+      50
     )
 
   ]);
