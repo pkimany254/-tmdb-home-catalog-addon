@@ -1480,7 +1480,7 @@ async function bestofmonth() {
     );
 
 console.log(
-  "TOP PICKS FINAL:",
+  "BEST OF MONTH FINAL:",
   combined.length,
   "first IDs:",
   combined
