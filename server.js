@@ -673,7 +673,7 @@ async function newReleases() {
       movies
         .filter(
           x =>
-            (x.popularity || 0) >= 0 &&
+            (x.popularity || 0) >= 0.5 &&
             (x.vote_count || 0) >= 0 &&
             Boolean(x.poster_path)
         )
@@ -692,7 +692,7 @@ async function newReleases() {
       tv
         .filter(
           x =>
-            (x.popularity || 0) >= 0 &&
+            (x.popularity || 0) >= 0.5 &&
             (x.vote_count || 0) >= 0 &&
             Boolean(x.poster_path)
         )
