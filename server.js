@@ -641,7 +641,7 @@ async function newReleases() {
         include_adult:
           "false"
       },
-      10
+      50
     ),
 
     tmdbPages(
@@ -659,7 +659,7 @@ async function newReleases() {
         include_adult:
           "false"
       },
-      10
+      50
     )
 
   ]);
@@ -673,7 +673,7 @@ async function newReleases() {
       movies
         .filter(
           x =>
-            (x.popularity || 0) >= 0.8 &&
+            (x.popularity || 0) >= 2 &&
             (x.vote_count || 0) >= 0 &&
             Boolean(x.poster_path)
         )
@@ -692,7 +692,7 @@ async function newReleases() {
       tv
         .filter(
           x =>
-            (x.popularity || 0) >= 0.8 &&
+            (x.popularity || 0) >= 2 &&
             (x.vote_count || 0) >= 0 &&
             Boolean(x.poster_path)
         )
