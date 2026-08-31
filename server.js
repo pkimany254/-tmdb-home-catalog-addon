@@ -1326,7 +1326,7 @@ async function bestofmonth() {
   const today =
     day();
 
-  const oneMonthAgo =
+  const monthAgo =
     day(-30);
 
   const [
@@ -1344,10 +1344,10 @@ async function bestofmonth() {
           7,
 
         "vote_count.gte":
-          500,
+          100,
 
         "primary_release_date.gte":
-          oneMonthAgo,
+          monthAgo,
 
         "primary_release_date.lte":
           today,
@@ -1368,10 +1368,10 @@ async function bestofmonth() {
           7,
 
         "vote_count.gte":
-          500,
+          100,
 
         "first_air_date.gte":
-          oneMonthAgo,
+          monthAgo,
 
         "first_air_date.lte":
           today,
@@ -1403,15 +1403,6 @@ async function bestofmonth() {
       media_type: "movie"
     }));
 
-  /*
-   * Movies must already have a digital release.
-   */
-
-  movieItems =
-    await digitalOnly(
-      movieItems
-    );
-
   /* -------------------------------------------------------
      SERIES
   ------------------------------------------------------- */
@@ -1440,10 +1431,9 @@ async function bestofmonth() {
     ...seriesItems
   ];
 
-  /*
-   * Give highly rated titles a strong advantage while
-   * still allowing popularity and vote count to matter.
-   */
+  /* -------------------------------------------------------
+     QUALITY RANKING
+  ------------------------------------------------------- */
 
   combined =
     combined.sort(
@@ -1472,10 +1462,15 @@ async function bestofmonth() {
         return scoreB - scoreA;
       }
     );
-  
+
+  console.log(
+    "BEST OF MONTH:",
+    combined.length
+  );
+
   return mixedMeta(
     dedupe(combined)
-  ).slice(0, 20);
+  ).slice(0, 100);
 }
 
 /* =========================================================
