@@ -1556,7 +1556,7 @@ async function bestOfYear() {
         include_adult:
           "false"
       },
-      50
+      100
     ),
 
     tmdbPages(
@@ -1580,7 +1580,7 @@ async function bestOfYear() {
         include_adult:
           "false"
       },
-      50
+      100
     )
 
   ]);
@@ -1673,7 +1673,7 @@ async function bestOfYear() {
 
   return mixedMeta(
     dedupe(combined)
-  ).slice(0, 100);
+  ).slice(0, 200);
 }
 
 /* =========================================================
