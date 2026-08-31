@@ -756,7 +756,7 @@ async function newReleases() {
 
   return mixedMeta(
     dedupe(combined)
-  ).slice(0, 200);
+  ).slice(0, 350);
 }
 
 /* =========================================================
