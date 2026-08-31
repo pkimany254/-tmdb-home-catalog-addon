@@ -996,7 +996,6 @@ async function trendingSeries() {
   .slice(0, target);
 }
 
-
 /* =========================================================
    5. IN THEATERS
 ========================================================= */
@@ -1008,6 +1007,26 @@ async function inTheatres() {
       "/movie/now_playing",
       {},
       50
+    );
+
+  /* -------------------------------------------------------
+     ONLY RECENT THEATRICAL RELEASES
+     Prevents old movies from appearing in theatres.
+  ------------------------------------------------------- */
+
+  movies =
+    movies.filter(
+      x => {
+
+        const releaseDate =
+          x.release_date || "";
+
+        return (
+          releaseDate &&
+          releaseDate >= day(-90) &&
+          releaseDate <= day()
+        );
+      }
     );
 
   movies =
