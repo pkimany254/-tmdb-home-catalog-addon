@@ -630,7 +630,7 @@ async function newReleases() {
       "/discover/movie",
       {
         "primary_release_date.gte":
-          day(-180),
+          day(-90),
 
         "primary_release_date.lte":
           day(),
@@ -648,7 +648,7 @@ async function newReleases() {
       "/discover/tv",
       {
         "first_air_date.gte":
-          day(-180),
+          day(-90),
 
         "first_air_date.lte":
           day(),
