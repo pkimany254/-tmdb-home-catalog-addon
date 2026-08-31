@@ -1293,7 +1293,7 @@ async function bestofmonth() {
           "popularity.desc",
 
         "vote_average.gte":
-          7,
+          6,
 
         "vote_count.gte":
           100,
@@ -1307,7 +1307,7 @@ async function bestofmonth() {
         include_adult:
           "false"
       },
-      5
+      50
     ),
 
     tmdbPages(
@@ -1317,7 +1317,7 @@ async function bestofmonth() {
           "popularity.desc",
 
         "vote_average.gte":
-          7,
+          6,
 
         "vote_count.gte":
           100,
@@ -1331,7 +1331,7 @@ async function bestofmonth() {
         include_adult:
           "false"
       },
-      5
+      50
     )
 
   ]);
