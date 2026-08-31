@@ -617,7 +617,6 @@ async function digitalOnly(items) {
 /* =========================================================
    3. ALL NEW
    MIXED MOVIES + SERIES
-   LATEST RELEASES FIRST
 ========================================================= */
 
 async function newReleases() {
@@ -631,7 +630,7 @@ async function newReleases() {
       "/discover/movie",
       {
         "primary_release_date.gte":
-          day(-90),
+          day(-180),
 
         "primary_release_date.lte":
           day(),
@@ -642,14 +641,14 @@ async function newReleases() {
         include_adult:
           "false"
       },
-      50
+      10
     ),
 
     tmdbPages(
       "/discover/tv",
       {
         "first_air_date.gte":
-          day(-90),
+          day(-180),
 
         "first_air_date.lte":
           day(),
@@ -660,7 +659,7 @@ async function newReleases() {
         include_adult:
           "false"
       },
-      50
+      10
     )
 
   ]);
@@ -671,10 +670,17 @@ async function newReleases() {
 
   const movieItems =
     withoutAnime(
-      movies.map(x => ({
-        ...x,
-        media_type: "movie"
-      }))
+      movies
+        .filter(
+          x =>
+            (x.popularity || 0) >= 2 &&
+            (x.vote_count || 0) >= 10 &&
+            Boolean(x.poster_path)
+        )
+        .map(x => ({
+          ...x,
+          media_type: "movie"
+        }))
     );
 
   /* -------------------------------------------------------
@@ -683,48 +689,68 @@ async function newReleases() {
 
   const seriesItems =
     withoutAnime(
-      tv.map(x => ({
-        ...x,
-        media_type: "tv"
-      }))
+      tv
+        .filter(
+          x =>
+            (x.popularity || 0) >= 2 &&
+            (x.vote_count || 0) >= 10 &&
+            Boolean(x.poster_path)
+        )
+        .map(x => ({
+          ...x,
+          media_type: "tv"
+        }))
+    );
+
+  /* -------------------------------------------------------
+     REMOVE EXCLUDED GENRES
+  ------------------------------------------------------- */
+
+  const filteredMovies =
+    withoutExcludedGenres(
+      movieItems,
+      "movie"
+    );
+
+  const filteredSeries =
+    withoutExcludedGenres(
+      seriesItems,
+      "series"
     );
 
   /* -------------------------------------------------------
      COMBINE
   ------------------------------------------------------- */
 
-  const combined = [
-    ...movieItems,
-    ...seriesItems
+  let combined = [
+    ...filteredMovies,
+    ...filteredSeries
   ];
 
-  /*
-   * Latest release/air date first.
-   * Popularity does NOT affect the order.
-   */
+  /* -------------------------------------------------------
+     LATEST RELEASE FIRST
+  ------------------------------------------------------- */
 
-  combined.sort(
-    (a, b) => {
+  combined =
+    combined.sort(
+      (a, b) => {
 
-      const dateA =
-        a.media_type === "movie"
-          ? a.release_date
-          : a.first_air_date;
+        const dateA =
+          a.media_type === "movie"
+            ? (a.release_date || "")
+            : (a.first_air_date || "");
 
-      const dateB =
-        b.media_type === "movie"
-          ? b.release_date
-          : b.first_air_date;
+        const dateB =
+          b.media_type === "movie"
+            ? (b.release_date || "")
+            : (b.first_air_date || "");
 
-      return (
-        new Date(dateB || 0) -
-        new Date(dateA || 0)
-      );
-    }
-  );
+        return dateB.localeCompare(dateA);
+      }
+    );
 
   console.log(
-    "NEW RELEASES:",
+    "ALL NEW:",
     combined.length
   );
 
