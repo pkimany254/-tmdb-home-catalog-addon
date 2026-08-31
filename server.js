@@ -1296,7 +1296,7 @@ async function bestofmonth() {
           6,
 
         "vote_count.gte":
-          100,
+          80,
 
         "primary_release_date.gte":
           monthAgo,
@@ -1320,7 +1320,7 @@ async function bestofmonth() {
           6,
 
         "vote_count.gte":
-          100,
+          80,
 
         "first_air_date.gte":
           monthAgo,
@@ -1556,7 +1556,7 @@ async function bestOfYear() {
         include_adult:
           "false"
       },
-      10
+      50
     ),
 
     tmdbPages(
@@ -1580,7 +1580,7 @@ async function bestOfYear() {
         include_adult:
           "false"
       },
-      10
+      50
     )
 
   ]);
