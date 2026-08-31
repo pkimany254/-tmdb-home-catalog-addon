@@ -35,7 +35,7 @@ const manifest = {
   idPrefixes: ["tt", "tmdb:"],
 
   catalogs: [
-    { id: "top-picks", type: "movie", name: "Best of the Month", extra: [{ name: "skip", isRequired: false }] },
+    { id: "best-of-month", type: "movie", name: "Best of the Month", extra: [{ name: "skip", isRequired: false }] },
     { id: "best-of-year", type: "movie", name: "Best of the Year", extra: [{ name: "skip", isRequired: false }] },
     { id: "trending-now", type: "movie", name: "All Trending", extra: [{ name: "skip", isRequired: false }] },
     { id: "popular", type: "movie", name: "All Popular", extra: [{ name: "skip", isRequired: false }] },
@@ -1321,7 +1321,7 @@ async function upcomingSeries() {
    MIXED MOVIES + SERIES
 ========================================================= */
 
-async function topPicks() {
+async function bestofmonth() {
 
   const today =
     day();
@@ -1333,6 +1333,12 @@ async function topPicks() {
     movies,
     series
   ] = await Promise.all([
+
+    console.log(
+  "BEST OF MONTH RAW:",
+  "movies =", movies.length,
+  "series =", series.length
+);
 
     tmdbPages(
       "/discover/movie",
@@ -1473,6 +1479,21 @@ async function topPicks() {
       }
     );
 
+console.log(
+  "TOP PICKS FINAL:",
+  combined.length,
+  "first IDs:",
+  combined
+    .slice(0, 5)
+    .map(x => ({
+      id: x.id,
+      type: x.media_type,
+      title:
+        x.title ||
+        x.name
+    }))
+);
+  
   return mixedMeta(
     dedupe(combined)
   ).slice(0, 20);
@@ -1736,20 +1757,15 @@ async function bestOfYear() {
 builder.defineCatalogHandler(
   async args => {
 
-    console.log(
-  "CATALOG REQUEST:",
-  args.id
-);
-
     let metas = [];
 
     try {
 
       switch (args.id) {
 
-        case "top-picks":
+        case "best-of-month":
           metas =
-            await topPicks();
+            await bestofmonth();
           break;
 
         case "best-of-year":
