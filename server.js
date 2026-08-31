@@ -1736,6 +1736,11 @@ async function bestOfYear() {
 builder.defineCatalogHandler(
   async args => {
 
+    console.log(
+  "CATALOG REQUEST:",
+  args.id
+);
+
     let metas = [];
 
     try {
