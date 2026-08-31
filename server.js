@@ -1336,49 +1336,49 @@ async function bestofmonth() {
 
     tmdbPages(
       "/discover/movie",
-      {
-        sort_by:
-          "popularity.desc",
+     {
+  sort_by:
+    "popularity.desc",
 
-        "vote_average.gte":
-          7,
+  "vote_average.gte":
+    6.5,
 
-        "vote_count.gte":
-          100,
+  "vote_count.gte":
+    50,
 
-        "primary_release_date.gte":
-          monthAgo,
+  "primary_release_date.gte":
+    monthAgo,
 
-        "primary_release_date.lte":
-          today,
+  "primary_release_date.lte":
+    today,
 
-        include_adult:
-          "false"
-      },
+  include_adult:
+    "false"
+},
       5
     ),
 
     tmdbPages(
       "/discover/tv",
       {
-        sort_by:
-          "popularity.desc",
+  sort_by:
+    "popularity.desc",
 
-        "vote_average.gte":
-          7,
+  "vote_average.gte":
+    6.5,
 
-        "vote_count.gte":
-          100,
+  "vote_count.gte":
+    50,
 
-        "first_air_date.gte":
-          monthAgo,
+  "first_air_date.gte":
+    monthAgo,
 
-        "first_air_date.lte":
-          today,
+  "first_air_date.lte":
+    today,
 
-        include_adult:
-          "false"
-      },
+  include_adult:
+    "false"
+},
       5
     )
 
