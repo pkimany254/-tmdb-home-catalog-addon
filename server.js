@@ -1542,10 +1542,10 @@ async function bestOfYear() {
           "popularity.desc",
 
         "vote_average.gte":
-          7,
+          6.5,
 
         "vote_count.gte":
-          500,
+          300,
 
         "primary_release_date.gte":
           yearStart,
@@ -1566,10 +1566,10 @@ async function bestOfYear() {
           "popularity.desc",
 
         "vote_average.gte":
-          7,
+          6.5,
 
         "vote_count.gte":
-          500,
+          300,
 
         "first_air_date.gte":
           yearStart,
