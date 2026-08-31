@@ -1334,12 +1334,6 @@ async function bestofmonth() {
     series
   ] = await Promise.all([
 
-    console.log(
-  "BEST OF MONTH RAW:",
-  "movies =", movies.length,
-  "series =", series.length
-);
-
     tmdbPages(
       "/discover/movie",
       {
@@ -1478,21 +1472,6 @@ async function bestofmonth() {
         return scoreB - scoreA;
       }
     );
-
-console.log(
-  "BEST OF MONTH FINAL:",
-  combined.length,
-  "first IDs:",
-  combined
-    .slice(0, 5)
-    .map(x => ({
-      id: x.id,
-      type: x.media_type,
-      title:
-        x.title ||
-        x.name
-    }))
-);
   
   return mixedMeta(
     dedupe(combined)
