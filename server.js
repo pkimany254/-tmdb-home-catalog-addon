@@ -1356,6 +1356,15 @@ async function bestofmonth() {
     tmdbPages(
       "/discover/movie",
       {
+        sort_by:
+          "popularity.desc",
+
+        "vote_average.gte":
+          7,
+
+        "vote_count.gte":
+          100,
+
         "primary_release_date.gte":
           monthAgo,
 
@@ -1363,10 +1372,7 @@ async function bestofmonth() {
           today,
 
         include_adult:
-          "false",
-
-        sort_by:
-          "primary_release_date.desc"
+          "false"
       },
       5
     ),
@@ -1374,6 +1380,15 @@ async function bestofmonth() {
     tmdbPages(
       "/discover/tv",
       {
+        sort_by:
+          "popularity.desc",
+
+        "vote_average.gte":
+          7,
+
+        "vote_count.gte":
+          100,
+
         "first_air_date.gte":
           monthAgo,
 
@@ -1381,10 +1396,7 @@ async function bestofmonth() {
           today,
 
         include_adult:
-          "false",
-
-        sort_by:
-          "first_air_date.desc"
+          "false"
       },
       5
     )
@@ -1439,7 +1451,7 @@ async function bestofmonth() {
   ];
 
   /* -------------------------------------------------------
-     QUALITY SCORE
+     QUALITY RANKING
   ------------------------------------------------------- */
 
   combined =
@@ -1469,6 +1481,11 @@ async function bestofmonth() {
         return scoreB - scoreA;
       }
     );
+
+  console.log(
+    "BEST OF MONTH:",
+    combined.length
+  );
 
   return mixedMeta(
     dedupe(combined)
