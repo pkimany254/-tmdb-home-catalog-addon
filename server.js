@@ -1685,6 +1685,11 @@ async function bestOfYear() {
 builder.defineCatalogHandler(
   async args => {
 
+    console.log(
+      "WUPLAY CATALOG REQUEST:",
+      JSON.stringify(args, null, 2)
+    );
+
     let metas = [];
 
     try {
