@@ -1705,7 +1705,7 @@ async function latestOnDigital() {
 
   // EDIT THESE WHENEVER YOU WANT
   const voteCountMinimum = 0;
-  const popularityMinimum = 1;
+  const popularityMinimum = 2;
 
   let movies =
     await tmdbPages(
@@ -1723,7 +1723,7 @@ async function latestOnDigital() {
         include_adult:
           "false"
       },
-      150
+      250
     );
 
   /* -------------------------------------------------------
