@@ -1754,6 +1754,12 @@ async function latestOnDigital() {
       media_type: "movie"
     }));
 
+  movies =
+  movies.filter(
+    x =>
+      x.original_language === "en"
+  );
+
   /* -------------------------------------------------------
      CHECK ACTUAL DIGITAL RELEASE DATE
   ------------------------------------------------------- */
