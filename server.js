@@ -481,13 +481,24 @@ function day(offset = 0) {
 
   const d = new Date();
 
-  d.setUTCDate(
-    d.getUTCDate() + offset
+  d.setDate(
+    d.getDate() + offset
   );
 
-  return d
-    .toISOString()
-    .slice(0, 10);
+  const year =
+    d.getFullYear();
+
+  const month =
+    String(
+      d.getMonth() + 1
+    ).padStart(2, "0");
+
+  const date =
+    String(
+      d.getDate()
+    ).padStart(2, "0");
+
+  return `${year}-${month}-${date}`;
 }
 
 async function tmdbPages(
