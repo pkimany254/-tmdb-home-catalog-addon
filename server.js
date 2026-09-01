@@ -1723,7 +1723,7 @@ async function latestOnDigital() {
         include_adult:
           "false"
       },
-      100
+      150
     );
 
   /* -------------------------------------------------------
