@@ -1703,6 +1703,7 @@ async function latestOnDigital() {
   const endDate =
     day();
 
+  // EDIT THESE WHENEVER YOU WANT
   const voteCountMinimum = 0;
   const popularityMinimum = 1;
 
@@ -1710,6 +1711,9 @@ async function latestOnDigital() {
     await tmdbPages(
       "/discover/movie",
       {
+        "primary_release_date.gte":
+          day(-365),
+
         "primary_release_date.lte":
           endDate,
 
@@ -1732,8 +1736,7 @@ async function latestOnDigital() {
         (x.vote_count || 0) >=
           voteCountMinimum &&
         (x.popularity || 0) >=
-          popularityMinimum &&
-        Boolean(x.poster_path)
+          popularityMinimum
     );
 
   movies =
@@ -1752,7 +1755,7 @@ async function latestOnDigital() {
     }));
 
   /* -------------------------------------------------------
-     FIND ACTUAL DIGITAL RELEASE DATE
+     CHECK ACTUAL DIGITAL RELEASE DATE
   ------------------------------------------------------- */
 
   const digitalMovies = [];
@@ -1790,34 +1793,42 @@ async function latestOnDigital() {
             of country.release_dates || []
           ) {
 
+            // TMDB release type 4 = Digital
             if (
               release.type === 4 &&
               release.release_date
             ) {
 
-              const date =
+              const digitalDate =
                 release.release_date
                   .slice(0, 10);
 
               if (
-                date >= startDate &&
-                date <= endDate &&
+                digitalDate >= startDate &&
+                digitalDate <= endDate &&
                 (
                   !latestDigitalDate ||
-                  date > latestDigitalDate
+                  digitalDate >
+                    latestDigitalDate
                 )
               ) {
+
                 latestDigitalDate =
-                  date;
+                  digitalDate;
+
               }
+
             }
+
           }
+
         }
 
         if (latestDigitalDate) {
 
           digitalMovies.push({
             ...item,
+
             _digitalReleaseDate:
               latestDigitalDate
           });
@@ -1833,7 +1844,9 @@ async function latestOnDigital() {
         );
 
       }
+
     }
+
   }
 
   const workerCount =
