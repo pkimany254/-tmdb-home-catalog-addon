@@ -42,6 +42,7 @@ const manifest = {
     { id: "popular", type: "movie", name: "All Popular", extra: [{ name: "skip", isRequired: false }] },
     { id: "now-playing", type: "movie", name: "Available Today", extra: [{ name: "skip", isRequired: false }] },
     { id: "new-releases", type: "movie", name: "All New", extra: [{ name: "skip", isRequired: false }] },
+    { id: "latest-on-digital", type: "movie", name: "Latest on Digital", extra: [{ name: "skip", isRequired: false }] },
     { id: "in-theatres", type: "movie", name: "Latest In Theaters", extra: [{ name: "skip", isRequired: false }] },
     { id: "upcoming", type: "movie", name: "Upcoming", extra: [{ name: "skip", isRequired: false }] }
   ]
@@ -1690,6 +1691,190 @@ async function bestOfYear() {
 }
 
 /* =========================================================
+   11. LATEST ON DIGITAL
+   MOVIES ONLY
+========================================================= */
+
+async function latestOnDigital() {
+
+  const startDate =
+    day(-90);
+
+  const endDate =
+    day();
+
+  const voteCountMinimum = 0;
+  const popularityMinimum = 0;
+
+  let movies =
+    await tmdbPages(
+      "/discover/movie",
+      {
+        "primary_release_date.lte":
+          endDate,
+
+        sort_by:
+          "primary_release_date.desc",
+
+        include_adult:
+          "false"
+      },
+      50
+    );
+
+  /* -------------------------------------------------------
+     BASIC FILTERS
+  ------------------------------------------------------- */
+
+  movies =
+    movies.filter(
+      x =>
+        (x.vote_count || 0) >=
+          voteCountMinimum &&
+        (x.popularity || 0) >=
+          popularityMinimum &&
+        Boolean(x.poster_path)
+    );
+
+  movies =
+    withoutAnime(movies);
+
+  movies =
+    withoutExcludedGenres(
+      movies,
+      "movie"
+    );
+
+  movies =
+    movies.map(x => ({
+      ...x,
+      media_type: "movie"
+    }));
+
+  /* -------------------------------------------------------
+     FIND ACTUAL DIGITAL RELEASE DATE
+  ------------------------------------------------------- */
+
+  const digitalMovies = [];
+
+  let index = 0;
+
+  async function worker() {
+
+    while (
+      index < movies.length
+    ) {
+
+      const item =
+        movies[index++];
+
+      try {
+
+        const data =
+          await tmdb(
+            `/movie/${item.id}/release_dates`,
+            {},
+            86400
+          );
+
+        let latestDigitalDate =
+          null;
+
+        for (
+          const country
+          of data.results || []
+        ) {
+
+          for (
+            const release
+            of country.release_dates || []
+          ) {
+
+            if (
+              release.type === 4 &&
+              release.release_date
+            ) {
+
+              const date =
+                release.release_date
+                  .slice(0, 10);
+
+              if (
+                date >= startDate &&
+                date <= endDate &&
+                (
+                  !latestDigitalDate ||
+                  date > latestDigitalDate
+                )
+              ) {
+                latestDigitalDate =
+                  date;
+              }
+            }
+          }
+        }
+
+        if (latestDigitalDate) {
+
+          digitalMovies.push({
+            ...item,
+            _digitalReleaseDate:
+              latestDigitalDate
+          });
+
+        }
+
+      } catch (error) {
+
+        console.warn(
+          "Latest digital release check failed:",
+          item.id,
+          error.message
+        );
+
+      }
+    }
+  }
+
+  const workerCount =
+    Math.min(
+      8,
+      movies.length
+    );
+
+  await Promise.all(
+    Array.from(
+      {
+        length: workerCount
+      },
+      worker
+    )
+  );
+
+  /* -------------------------------------------------------
+     NEWEST DIGITAL RELEASE FIRST
+  ------------------------------------------------------- */
+
+  digitalMovies.sort(
+    (a, b) =>
+      b._digitalReleaseDate.localeCompare(
+        a._digitalReleaseDate
+      )
+  );
+
+  console.log(
+    "LATEST ON DIGITAL:",
+    digitalMovies.length
+  );
+
+  return dedupe(
+    digitalMovies
+  )
+    .map(movieMeta)
+    .slice(0, 100);
+}
+
+/* =========================================================
    CATALOG HANDLER
 ========================================================= */
 
@@ -1731,6 +1916,11 @@ builder.defineCatalogHandler(
           metas =
             await newReleases();
           break;
+
+          case "latest-on-digital":
+  metas =
+    await latestOnDigital();
+  break;
 
         case "in-theatres":
           metas =
