@@ -1,3 +1,5 @@
+process.env.TZ = "Africa/Nairobi";
+
 const { addonBuilder, getRouter } = require("stremio-addon-sdk");
 const express = require("express");
 
