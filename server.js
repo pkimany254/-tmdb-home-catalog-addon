@@ -687,7 +687,7 @@ async function newReleases() {
         .filter(
           x =>
             (x.popularity || 0) >= 2 &&
-            (x.vote_count || 0) >= 0 &&
+            (x.vote_count || 0) >= 5 &&
             Boolean(x.poster_path)
         )
         .map(x => ({
@@ -706,7 +706,7 @@ async function newReleases() {
         .filter(
           x =>
             (x.popularity || 0) >= 2 &&
-            (x.vote_count || 0) >= 0 &&
+            (x.vote_count || 0) >= 5 &&
             Boolean(x.poster_path)
         )
         .map(x => ({
