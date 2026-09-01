@@ -1884,7 +1884,7 @@ async function latestOnDigital() {
     digitalMovies
   )
     .map(movieMeta)
-    .slice(0, 200);
+    .slice(0, 300);
 }
 
 /* =========================================================
