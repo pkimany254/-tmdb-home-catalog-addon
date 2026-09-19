@@ -1321,7 +1321,7 @@ async function bestofmonth() {
         include_adult:
           "false"
       },
-      50
+      80
     ),
 
     tmdbPages(
@@ -1345,7 +1345,7 @@ async function bestofmonth() {
         include_adult:
           "false"
       },
-      50
+      80
     )
 
   ]);
