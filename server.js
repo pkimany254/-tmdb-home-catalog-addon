@@ -1160,120 +1160,67 @@ async function returningShows() {
     );
 
   shows =
-    dedupe(shows);
-
-  console.log(
-    "RETURNING SHOWS:",
-    shows.length
-  );
-
-  return shows
-    .sort(
-      (a, b) =>
-        (b.popularity || 0) -
-        (a.popularity || 0)
-    )
-    .map(seriesMeta)
-    .slice(0, 200);
-}
-
-/* =========================================================
-   RENEWED SHOWS
-   SERIES WITH A FUTURE SEASON LISTED IN TMDB
-========================================================= */
-
-async function renewedShows() {
+    dedupe(shows)
+      .sort(
+        (a, b) =>
+          (b.popularity || 0) -
+          (a.popularity || 0)
+      )
+      .slice(0, 200);
 
   const today = day();
 
-  let candidates =
-    await tmdbPages(
-      "/discover/tv",
-      {
-        with_status: 0,
-        sort_by: "popularity.desc",
-        "vote_count.gte": 5,
-        include_adult: "false"
-      },
-      10
-    );
-
-  candidates =
-    withoutAnime(candidates);
-
-  candidates =
-    withoutExcludedGenres(
-      candidates,
-      "series"
-    );
-
-  candidates =
-    candidates.filter(
-      x =>
-        x.original_language === "en" &&
-        Boolean(x.poster_path)
-    );
-
-  candidates =
-    dedupe(candidates);
-
-  const details = await Promise.all(
-    candidates.map(async show => {
+  const withSeasonDates = await Promise.all(
+    shows.map(async show => {
       try {
-        return await tmdb(
+        const details = await tmdb(
           `/tv/${show.id}`,
           {},
           86400
         );
+
+        const airedSeasons =
+          (details.seasons || [])
+            .filter(
+              season =>
+                (season.season_number || 0) > 0 &&
+                season.air_date &&
+                season.air_date <= today
+            )
+            .sort(
+              (a, b) =>
+                (b.air_date || "").localeCompare(a.air_date || "")
+            );
+
+        return {
+          ...show,
+          _latestSeasonAirDate:
+            airedSeasons[0]?.air_date || ""
+        };
       } catch (error) {
         console.error(
-          `Renewed Shows details failed for ${show.id}:`,
+          `Returning Shows season lookup failed for ${show.id}:`,
           error.message
         );
-        return null;
+
+        return {
+          ...show,
+          _latestSeasonAirDate: ""
+        };
       }
     })
   );
 
-  const renewed = details.filter(show => {
-    if (!show || !show.poster_path) return false;
-
-    const seasons =
-      (show.seasons || [])
-        .filter(season => (season.season_number || 0) > 0);
-
-    const airedSeasons =
-      seasons.filter(
-        season =>
-          season.air_date &&
-          season.air_date <= today
-      );
-
-    const latestAiredSeason = Math.max(
-      0,
-      ...airedSeasons.map(season => season.season_number || 0)
-    );
-
-    return seasons.some(
-      season =>
-        (season.season_number || 0) > latestAiredSeason &&
-        (
-          (season.air_date && season.air_date > today) ||
-          (season.episode_count || 0) > 0
-        )
-    );
-  });
-
   console.log(
-    "RENEWED SHOWS:",
-    renewed.length
+    "RETURNING SHOWS:",
+    withSeasonDates.length
   );
 
-  return renewed
+  return withSeasonDates
     .sort(
       (a, b) =>
-        (b.popularity || 0) -
-        (a.popularity || 0)
+        (b._latestSeasonAirDate || "").localeCompare(a._latestSeasonAirDate || "") ||
+        (b.popularity || 0) - (a.popularity || 0)
     )
     .map(seriesMeta)
     .slice(0, 200);
@@ -2111,11 +2058,6 @@ builder.defineCatalogHandler(
         case "returning-shows":
           metas =
             await returningShows();
-          break;
-
-        case "renewed-shows":
-          metas =
-            await renewedShows();
           break;
 
         default:
