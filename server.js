@@ -44,7 +44,8 @@ const manifest = {
     { id: "new-releases", type: "movie", name: "All New", extra: [{ name: "skip", isRequired: false }] },
     { id: "latest-on-digital", type: "movie", name: "Latest on Digital", extra: [{ name: "skip", isRequired: false }] },
     { id: "in-theatres", type: "movie", name: "Latest In Theaters", extra: [{ name: "skip", isRequired: false }] },
-    { id: "upcoming", type: "movie", name: "Upcoming", extra: [{ name: "skip", isRequired: false }] }
+    { id: "upcoming", type: "movie", name: "Upcoming", extra: [{ name: "skip", isRequired: false }] },
+    { id: "returning-shows", type: "series", name: "Returning Shows", extra: [{ name: "skip", isRequired: false }] }
   ]
 };
 
@@ -1123,6 +1124,59 @@ async function airingToday() {
 
 
 /* =========================================================
+   RETURNING SHOWS
+   CURRENTLY AIRING TV SERIES
+========================================================= */
+
+async function returningShows() {
+
+  let shows =
+    await tmdbPages(
+      "/discover/tv",
+      {
+        with_status: 0,
+        sort_by: "popularity.desc",
+        "vote_count.gte": 5,
+        include_adult: "false"
+      },
+      10
+    );
+
+  shows =
+    withoutAnime(shows);
+
+  shows =
+    withoutExcludedGenres(
+      shows,
+      "series"
+    );
+
+  shows =
+    shows.filter(
+      x =>
+        x.original_language === "en" &&
+        Boolean(x.poster_path)
+    );
+
+  shows =
+    dedupe(shows);
+
+  console.log(
+    "RETURNING SHOWS:",
+    shows.length
+  );
+
+  return shows
+    .sort(
+      (a, b) =>
+        (b.popularity || 0) -
+        (a.popularity || 0)
+    )
+    .map(seriesMeta)
+    .slice(0, 200);
+}
+
+/* =========================================================
    7. UPCOMING
    MIXED UPCOMING MOVIES + SERIES
 ========================================================= */
@@ -1949,6 +2003,11 @@ builder.defineCatalogHandler(
         case "upcoming":
           metas =
             await upcoming();
+          break;
+
+        case "returning-shows":
+          metas =
+            await returningShows();
           break;
 
         default:
