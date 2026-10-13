@@ -1139,7 +1139,7 @@ async function returningShows() {
         "vote_count.gte": 5,
         include_adult: "false"
       },
-      10
+      50
     );
 
   shows =
