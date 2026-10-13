@@ -45,7 +45,7 @@ const manifest = {
     { id: "latest-on-digital", type: "movie", name: "Latest on Digital", extra: [{ name: "skip", isRequired: false }] },
     { id: "in-theatres", type: "movie", name: "Latest In Theaters", extra: [{ name: "skip", isRequired: false }] },
     { id: "upcoming", type: "movie", name: "Upcoming", extra: [{ name: "skip", isRequired: false }] },
-    { id: "returning-shows", type: "series", name: "Returning Shows", extra: [{ name: "skip", isRequired: false }] },
+    { id: "returning-shows", type: "series", name: "Recently Returned", extra: [{ name: "skip", isRequired: false }] },
     { id: "renewed-shows", type: "series", name: "Renewed Shows", extra: [{ name: "skip", isRequired: false }] }
   ]
 };
