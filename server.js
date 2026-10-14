@@ -1191,10 +1191,15 @@ async function returningShows() {
                 (b.air_date || "").localeCompare(a.air_date || "")
             );
 
+        const latestAiredSeason =
+          airedSeasons[0];
+
         return {
           ...show,
           _latestSeasonAirDate:
-            airedSeasons[0]?.air_date || ""
+            latestAiredSeason?.air_date || "",
+          _latestSeasonNumber:
+            latestAiredSeason?.season_number || 0
         };
       } catch (error) {
         console.error(
@@ -1204,7 +1209,8 @@ async function returningShows() {
 
         return {
           ...show,
-          _latestSeasonAirDate: ""
+          _latestSeasonAirDate: "",
+          _latestSeasonNumber: 0
         };
       }
     })
@@ -1215,7 +1221,14 @@ async function returningShows() {
     withSeasonDates.length
   );
 
+  // Exclude brand-new series: only keep shows whose latest
+  // already-aired season is season 2 or later.
   return withSeasonDates
+    .filter(
+      show =>
+        show._latestSeasonNumber > 1 &&
+        Boolean(show._latestSeasonAirDate)
+    )
     .sort(
       (a, b) =>
         (b._latestSeasonAirDate || "").localeCompare(a._latestSeasonAirDate || "") ||
